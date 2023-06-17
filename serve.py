@@ -55,15 +55,26 @@ def deserialize_request(req_json):
 
 # Response class and hanlders
 class Response(object):
-    def __init__(self, resp):
+    def __init__(self, resp, image = None):
         self.response = resp
+        if not image == None:
+            self.image = image
 
 class ResponseSchema(Schema):
     response = fields.Str()
+    image = fields.Str()
 
 def format_response(respstr):
-    schema = ResponseSchema(many=False)
-    return schema.dump(Response(respstr))
+    schema = ResponseSchema(many=False, partial=True)
+    respobj = Response(respstr)
+
+    # Basic image handling
+    imageTag = 'BASE64ENCODED:'
+    if respstr.startswith(imageTag):
+        respobj.response = 'Here is the image.'
+        respobj.image = respstr[len(imageTag):] # Strip BASE64ENCODED:
+
+    return schema.dump(respobj)
 
 # Setup factory dict with defaults
 # Retrieve from a dict if already instansitated

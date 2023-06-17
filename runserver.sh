@@ -10,4 +10,4 @@ export SD_STEPS=5
 #export FACTORY_TYPE=GOOGLE
 #export IMAGE_OUTPUT_PATH=./generated_images/output.png
 
-flask run --host 0.0.0.0
+pipenv run flask run --host 0.0.0.0

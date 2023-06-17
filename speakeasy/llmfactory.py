@@ -93,7 +93,7 @@ class LLMAndEmbeddingsFactory(LLMFactory):
         self.construct_embeddings()
 
     def __repr__(self):
-        return '<LLMFAndEmbeddingFactory(model_name={self.model_name, embedding_model_name={self.embedding_model_name}})>'.format(self=self)
+        return '<LLMFAndEmbeddingFactory(model_name={self.model_name}, embedding_model_name={self.embedding_model_name})>'.format(self=self)
 
     def construct_embeddings(self):
         """Construct the relevant Embeddings"""
@@ -131,7 +131,7 @@ class HuggingFaceFactory(LLMAndEmbeddingsFactory):
             )
     
     def __repr__(self):
-        return '<HuggingFaceFactory(model_name={self.model_name}})>'.format(self=self)
+        return '<HuggingFaceFactory(model_name={self.model_name}), embedding_model_name={self.embedding_model_name}>'.format(self=self)
 
     def construct_llm(self):
         self.llm=HuggingFaceHub(repo_id=self.model_name, model_kwargs={"temperature":self.temperature, "max_length":self.max_length})
@@ -167,9 +167,9 @@ class LocalLLMFactory(LLMAndEmbeddingsFactory):
     def construct_llm(self):
         tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         model = AutoModelForSeq2SeqLM.from_pretrained(self.model_name, 
-                #load_in_8bit=True, torch_dtype=torch.float16, low_cpu_mem_usage=True, device_map="auto",
+                #load_in_8bit=True, torch_dtype=torch.float16, low_cpu_mem_usage=True, device_map="auto"
                 )
-        model.to(torch.device(self.device_id))
+        model.to(torch.device(self.device_id)) # Do if not using load_in_8bit
         pipe = pipeline("text2text-generation", model=model, tokenizer=tokenizer, max_length=self.max_length,
                 temperature=self.temperature, top_p=0.95, repetition_penalty=1.15
                 )

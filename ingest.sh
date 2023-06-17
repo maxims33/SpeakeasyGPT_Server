@@ -26,5 +26,4 @@ if ${do_clean} == true; then
   ./cleandbs.sh
 fi
 
-python ingest.py --ingest-path=${ingest_path}
-
+pipenv run python ingest.py --ingest-path=${ingest_path}

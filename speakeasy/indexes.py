@@ -4,6 +4,7 @@ from langchain.vectorstores import Chroma
 from .customloaders import CustomCaptionLoader
 
 #TODO Support multiple image types like PrivateGPT
+#TODO Chromadb in pipenv giving warning about C functions, unlike the one installed with pip
 
 # Initialize the Document VectorStore
 def init_document_db(factory, file_path, persist_dir, chunk_size = 1500, chunk_overlap = 200):

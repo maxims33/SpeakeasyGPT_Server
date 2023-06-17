@@ -6,10 +6,10 @@ from langchain.chains.llm_math.prompt import PROMPT
 from langchain.vectorstores import Chroma
 from speakeasy.llmfactory import LLMFactory
 
-#TODO More tools to create - E.g.: vizGPT, Python, Summerization, Transalation, etc
-#TODO PAL Tool not working with Bard (Keeps telling me Sure, and also possibly issue with the stop used). Try diff LLM?
+#TODO More tools to create - E.g.: Summerization, Transalation, etc
+#TODO PAL Tool not working with Bard (Maybe need experimental Bard for code, and also possibly issue with the stop used).
 #TODO Consider further for which tools return_direct should be utilised to bypass agent handling the response from a tool
-#TODO Consider using decorators or other options.
+#TODO Consider using decorators or other options for code simplification.
 
 class CustomBaseTool(Tool):
     factory : LLMFactory = None
