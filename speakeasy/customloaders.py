@@ -3,6 +3,8 @@ from typing import List, Union
 from langchain.docstore.document import Document
 from langchain.document_loaders.base import BaseLoader
 
+# TODO Need to try to avoid the need to continuously reload the model
+
 class CustomCaptionLoader(BaseLoader):
     def __init__(
         self,
@@ -30,6 +32,7 @@ class CustomCaptionLoader(BaseLoader):
         ci = Interrogator(config)
         #caption = ci.interrogate(image)
         caption = ci.generate_caption(image)
+        print(f"Image Caption for {self.image_paths[0]}: {caption}")
         doc = Document(page_content=caption, metadata={"source": self.image_paths[0]})
         return [doc]
 

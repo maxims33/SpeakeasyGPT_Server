@@ -1,10 +1,28 @@
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.document_loaders import TextLoader, PyPDFLoader, DirectoryLoader, UnstructuredPDFLoader
 from langchain.vectorstores import Chroma
 from .customloaders import CustomCaptionLoader
+from langchain.document_loaders import (
+        DirectoryLoader, 
+        TextLoader, 
+        CSVLoader,
+        PyPDFLoader,
+        UnstructuredPDFLoader,
+        UnstructuredHTMLLoader,
+        UnstructuredPowerPointLoader,
+        UnstructuredWordDocumentLoader
+)
 
-#TODO Support multiple image types like PrivateGPT
 #TODO Chromadb in pipenv giving warning about C functions, unlike the one installed with pip
+
+def load_document_helper(folder_path, file_ext, loader_class, text_splitter = None):
+    loader = DirectoryLoader(folder_path, glob=file_ext, loader_cls=loader_class)
+    docs = loader.load()
+    if text_splitter == None:
+        print(f"Number of {file_ext}: {len(docs)}")
+        return docs
+    texts = text_splitter.split_documents(docs)
+    print(f"Number of {file_ext}: {len(docs)}, Number of texts split: {len(texts)}")
+    return texts
 
 # Initialize the Document VectorStore
 def init_document_db(factory, file_path, persist_dir, chunk_size = 1500, chunk_overlap = 200):
@@ -13,12 +31,12 @@ def init_document_db(factory, file_path, persist_dir, chunk_size = 1500, chunk_o
         chunk_size = chunk_size,
         chunk_overlap  = chunk_overlap
     )
-    # Load the PDFs
-    pdf_folder_path = file_path
-    loader = DirectoryLoader(pdf_folder_path, glob="./*.pdf", loader_cls=UnstructuredPDFLoader) #PydPDFLoader loads a doc per page
-    docs = loader.load()
-    texts = text_splitter.split_documents(docs)
-    print(f"Number of Docs: {len(docs)}, Number of Texst: {len(texts)}") 
+    texts = load_document_helper(file_path, "./*.pdf", UnstructuredPDFLoader, text_splitter) #PydPDFLoader loads a doc per page
+    texts += load_document_helper(file_path, "./*.html", UnstructuredHTMLLoader, text_splitter) 
+    texts += load_document_helper(file_path, "./*.pptx", UnstructuredPowerPointLoader, text_splitter) 
+    texts += load_document_helper(file_path, "./*.docx", UnstructuredWordDocumentLoader, text_splitter) 
+    texts += load_document_helper(file_path, "./*.csv", CSVLoader, text_splitter)
+    texts += load_document_helper(file_path, "./*.txt", TextLoader, text_splitter)
     return create_document_db(factory, texts, persist_dir = persist_dir)
 
 def create_document_db(factory, texts, persist_dir):
@@ -33,11 +51,8 @@ def load_document_db(factory, persist_dir):
 
 # Initialize the Image VectorStore
 def init_image_db(factory,  file_path, persist_dir):
-    # Load the Images
-    img_folder_path = file_path
-    loader = DirectoryLoader(img_folder_path, glob="*.jpg", loader_cls=CustomCaptionLoader) 
-    docs = loader.load()
-    print(f"Number of Images: {len(docs)}")
+    docs = load_document_helper(file_path, "./*.jpg", CustomCaptionLoader)
+    docs += load_document_helper(file_path, "./*.png", CustomCaptionLoader)
     return create_image_db(factory, docs, persist_dir = persist_dir)
 
 def create_image_db(factory, docs, persist_dir):
