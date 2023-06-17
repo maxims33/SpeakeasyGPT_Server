@@ -1,8 +1,8 @@
 #!/bin/sh
 
-export OPENAI_API_KEY=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
-export HUGGINGFACEHUB_API_TOKEN=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
-export _BARD_API_KEY=Wwj3feu9ay0bZNKFYEkEwkuTErrm3daRLrMFFozacpGDZ5clwQ_W0ViOU3CbNEaWhslgwg.
+export OPENAI_API_KEY=
+export HUGGINGFACEHUB_API_TOKEN=
+export _BARD_API_KEY=
 export DOCS_PERSIST_DIRECTORY=./db_docs/
 export IMAGES_PERSIST_DIRECTORY=./db_images/
 
