@@ -1,0 +1,37 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[[source]]
+name = "pytorch"
+#url = "https://download.pytorch.org/whl/torch_stable.html"
+url = "https://download.pytorch.org/whl/cu116"
+verify_ssl = false
+
+[packages]
+flask = "*"
+langchain = "*"
+marshmallow = "*"
+bardapi = "*"
+marshmallow-enum = "*"
+openai = "*"
+huggingface-hub = "*"
+transformers = "==4.26.1"
+sentence-transformers = "*"
+torch = {index = "pytorch", version = "==1.13.1+cu116"}
+torchvision = {index = "pytorch", version = "==0.14.1+cu116"}
+torchaudio = {index = "pytorch", version = "==0.13.1+cu116"}
+pytorch-lightning = "==2.0.1"
+unstructured = "==0.6.2"
+clip-interrogator = "==0.5.4"
+accelerate = "*"
+chromadb = "*"
+"pdfminer.six" = "*"
+bitsandbytes-windows = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"
+python_full_version = "3.10.11"
