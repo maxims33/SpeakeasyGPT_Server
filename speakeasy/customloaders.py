@@ -1,9 +1,8 @@
 from PIL import Image
 from typing import List, Union
 from langchain.docstore.document import Document
+from langchain.document_loaders import DirectoryLoader
 from langchain.document_loaders.base import BaseLoader
-
-# TODO Need to try to avoid the need to continuously reload the model
 
 class CustomCaptionLoader(BaseLoader):
     def __init__(
@@ -14,7 +13,7 @@ class CustomCaptionLoader(BaseLoader):
             self.image_paths = [path_images]
         else:
             self.image_paths = path_images
- 
+
     def load(self) -> List[Document]:
         """
         Load from a list of image files. Assumes only single item in list I think
@@ -26,13 +25,30 @@ class CustomCaptionLoader(BaseLoader):
                 "Raising Exception. Missing clip_interrogator moddule"
             )
 
-        image = Image.open(self.image_paths[0]).convert('RGB')
         config = Config(clip_model_name="ViT-L-14/openai", blip_model_type='blip-large', device='cuda', cache_path="./img_embeddings")
         config.apply_low_vram_defaults()
         ci = Interrogator(config)
-        #caption = ci.interrogate(image)
-        caption = ci.generate_caption(image)
-        print(f"Image Caption for {self.image_paths[0]}: {caption}")
-        doc = Document(page_content=caption, metadata={"source": self.image_paths[0]})
-        return [doc]
+        docList : List[Document] = []
+        for it in self.image_paths:
+            image = Image.open(it).convert('RGB')
+            #caption = ci.interrogate(image) # Reduced memory required by not running clip model
+            caption = ci.generate_caption(image)
+            print(f"Image Caption for {it}: {caption}")
+            doc = Document(page_content=caption, metadata={"source": str(it)})
+            docList.append(doc)
+        return docList
+
+class DirectoryCaptionLoader(DirectoryLoader):
+    def __init__(self, file_path, glob="./*"):
+        super(DirectoryCaptionLoader, self).__init__(file_path, glob = glob, loader_cls = None)
+        self.image_paths = []
+
+    def load_file(self, item, path, docs, pbar):
+        if item.is_file():
+            self.image_paths.append(item)
+    
+    def load(self) -> List[Document]:
+        super().load()
+        captions = CustomCaptionLoader(self.image_paths).load()
+        return captions
 

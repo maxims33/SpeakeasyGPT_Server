@@ -6,16 +6,20 @@ from langchain.agents.conversational.base import ConversationalAgent
 from langchain.agents.agent_toolkits import VectorStoreToolkit, VectorStoreInfo
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
-from langchain.experimental.plan_and_execute import PlanAndExecute, load_agent_executor, load_chat_planner
-from .tools.custom_tools import CustomInstructLLMTool, CustomPALTool, CustomMathTool
+from .tools.custom_tools import CustomInstructLLMTool, CustomMathTool, RunCodeTool
 from .tools.vectorstore_tools import CustomDocumentQueryTool, CustomImageQueryTool
-from .tools.image_tools import CustomGenerateImageTool
+from .tools.image_tools import CustomGenerateImageTool, SearchImageTool
 
-#TODO Exploring other agent types and toolkits - E.g.: Structured Chat?
-#TODO Exploring using Tool Shared Memory? - Or would it just confuse the LLM? Also should I be using a common LLMChain?
-#TODO Consider if adding memory backed by a Vectorstore would be useful
+#TODO Exploring other agents and output parsers E.g.: Structured/Pydantic Chat? OpenAI functions?
+#TODO Exploring adding memory backed by a Vectorstore. Explicit memory 'management' 
 
 class CustomBaseAgent(object):
+    def _handle_agent_error(self, error) -> str:
+        print("THE OUTPUT FORMAT IS INCORRECT!")
+        return f"CHECK YOUR OUTPUT FORMAT! {str(error)[:200]}"
+
+# Use only with Bard 
+class CustomBardAgent(CustomBaseAgent):
     @property
     def observation_prefix(self) -> str:
         """Prefix to append the observation with."""
@@ -23,10 +27,6 @@ class CustomBaseAgent(object):
 
     def _stop(self):
         return [f"\n{self.observation_prefix}"]
-
-    def _handle_agent_error(self, error) -> str:
-        print("THE OUTPUT FORMAT IS INCORRECT!")
-        return f"CHECK YOUR OUTPUT FORMAT! {str(error)[:200]}"
 
     # Overriding method from base class - main reason is to avoid sending stop on the last pass
     def return_stopped_response(
@@ -79,10 +79,6 @@ class CustomConversationalAgent(CustomBaseAgent, ConversationalAgent):
     def __init__(self, llm_chain, allowed_tools, verbose):
         super(CustomConversationalAgent, self).__init__(llm_chain=llm_chain, allowed_tools=allowed_tools, verbose=verbose)
 
-class CustomPlanAndExecuteAgent(PlanAndExecute):
-    def __init__(self, planner, executor, verbose):
-        super(CustomPlanAndExecuteAgent, self).__init__(planner=planner, executor=executor, verbose=verbose)
-
 
 # ------------------------------------------------------------------------------------
 
@@ -122,7 +118,8 @@ def custom_tools(factory, doc_db, img_db, include_base_tools = False) -> List:
         ),
         CustomDocumentQueryTool(factory, doc_db), 
         CustomImageQueryTool(factory, img_db), 
-        CustomPALTool(factory),
+        SearchImageTool(factory, return_direct=True),
+        RunCodeTool(factory, return_direct=True)
     ]
     return ct + bt
 
@@ -202,12 +199,4 @@ Thought: Do I need to use a tool? No
             early_stopping_method=early_stopping_method
         ) 
     return agent_executor
-
-# Initialize Plan And Execute Agent
-def init_plan_and_execute_agent(factory, doc_db, img_db, verbose=True): 
-    tools = custom_tools(factory, doc_db, img_db)
-    planner = load_chat_planner(factory.llm)
-    executor = load_agent_executor(factory.llm, tools, verbose=verbose)
-    agent = CustomPlanAndExecuteAgent(planner=planner, executor=executor, verbose=verbose)
-    return agent
 

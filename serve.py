@@ -4,17 +4,13 @@ from marshmallow import Schema, fields, post_load
 from marshmallow_enum import EnumField
 from langchain.chains import RetrievalQA
 from speakeasy.llmfactory import LLMType, init_factory, init_factory_from_type
-from speakeasy.customagents import init_agent, init_conversational_agent, init_plan_and_execute_agent
+from speakeasy.customagents import init_agent, init_conversational_agent
 from speakeasy.indexes import load_document_db, load_image_db
 from env_params import parse_environment_variables
 
-#TODO Sort out the flip flopping IP address issue
 
 # Flask app
 app = Flask(__name__)
-
-
-# -------------------------------------------
 
 # Collect environment variables or defaults
 env_config = parse_environment_variables()
@@ -32,7 +28,6 @@ img_db = load_image_db(factory, persist_dir=env_config['images_persist_directory
 # Setup the Agents
 agent = init_agent(factory, doc_db, img_db, max_iterations=1)
 convo_agent = init_conversational_agent(factory, doc_db, img_db)
-plan_and_execute_agent = init_plan_and_execute_agent(factory, doc_db, img_db)
 
 
 # ------- Serializing / Deserializing ------------------
@@ -80,6 +75,7 @@ def format_response(respstr):
 # Retrieve from a dict if already instansitated
 factory_dict = {
         'LLMType.GOOGLE': None,
+        'LLMType.BARD': None,
         'LLMType.HUGGINGFACE': None,
         'LLMType.LOCAL': None,
         'LLMType.OPENAI': None
@@ -112,7 +108,7 @@ def query_llm():
         print(f"Factory: {fa}")
         return format_response(fa.llm(req.prompt))
     except Exception as e:
-        print(f"Caught exception: {e.args[0]}")
+        print(f"Caught exception: {e}")
         return format_response(f'Oops sorry an error occured.') 
 
 @app.route("/search_docs", methods=['POST'])
@@ -127,7 +123,7 @@ def search_docs():
             return_source_documents=True)
         return format_response(chain(req.prompt)['result'])
     except Exception as e:
-        print(f"Caught exception: {e.args[0]}")
+        print(f"Caught exception: {e}")
         return format_response(f'Oops sorry an error occured.')
 
 @app.route("/search_images", methods=['POST'])
@@ -142,7 +138,7 @@ def search_images():
             return_source_documents=True)
         return format_response(chain(req.prompt)['result'])
     except Exception as e:
-        print(f"Caught exception: {e.args[0]}")
+        print(f"Caught exception: {e}")
         return format_response(f'Oops sorry an error occured.')
 
 @app.route("/run_agent", methods=['POST'])
@@ -151,7 +147,7 @@ def run_agent():
         req = deserialize_request(request)
         return format_response(agent.run(req.prompt))
     except Exception as e:
-        print(f"Caught exception: {e.args[0]}")
+        print(f"Caught exception: {e}")
         return format_response(f'Oops sorry an error occured.')
 
 @app.route("/run_convo_agent", methods=['POST'])
@@ -160,15 +156,9 @@ def run_convo_agent():
         req = deserialize_request(request)
         return format_response(convo_agent.run(input=req.prompt)) 
     except Exception as e:
-        print(f"Caught exception: {e.args[0]}")
+        print(f"Caught exception: {e}")
         return format_response(f'Oops sorry an error occured.')
 
-@app.route("/run_plan_and_execute_agent", methods=['POST'])
-def run_plan_and_execute_agent():
-    try:
-        req = deserialize_request(request)
-        return format_response(plan_and_execute_agent.run(req.prompt))
-    except Exception as e:
-        print(f"Caught exception: {e.args[0]}")
-        return format_response(f'Oops sorry an error occured.')
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
 

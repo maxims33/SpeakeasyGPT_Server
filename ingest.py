@@ -4,6 +4,8 @@ from speakeasy.llmfactory import init_factory
 from speakeasy.indexes import init_document_db, init_image_db
 from env_params import parse_environment_variables
 
+#TODO Consider multi threading to improve performance of ingestion
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description='SpeakEasyGPT - Ingest')
     parser.add_argument("--ingest-path", "-P", help='The file path to look for content to ingest', default='./filebox/')

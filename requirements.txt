@@ -1,25 +1,25 @@
-bardapi==0.1.8
-Flask==2.3.2
-langchain==0.0.202
-marshmallow==3.19.0
-marshmallow_enum==1.5.1
-Pillow==9.5.0 
-Requests==2.31.0 
-
-torch==2.0.1+cu117 # 1.13.1+cu116
-torchvision==0.15.2+cu117 # 0.14.1+cu116
-torchaudio==2.0.2+cu117 # 0.13.1+cu116
-touch-lighting==2.0.1
-
-openai
-huggingface-hub
-sentence_transformers
-chromadb
+-i https://pypi.org/simple 
+--extra-index-url https://download.pytorch.org/whl/cu117
+bardapi==0.1.29
+bitsandbytes==0.35.4
+clickhouse-connect==0.5.22
+cython==0.29.34
+flask==2.3.2
+google-cloud-aiplatform==1.28.1
+huggingface-hub==0.16.4
+langchain==0.0.247
+marshmallow==3.20.1
+marshmallow-enum==1.5.1
+openai==0.27.8
+pdfminer.six==20221105
+pillow==10.0.0 
+torch==1.13.1+cu117 
+torchvision==0.14.1+cu117 
+pytorch-lightning==2.0.1 
 transformers==4.26.1
-clip_interrogator==0.5.4
-unstructured==0.6.2 # Otherwise locks up
-pdfminer.six 
-accelerate
-#bitsandbytes If Linux
-bitsandbytes-windows # If Windows - Note to fix lib.so filename if needed
+unstructured==0.6.2
+clip-interrogator==0.5.4
+accelerate==0.18.0
+sentence-transformers==2.2.2
+chromadb==0.4.6
 

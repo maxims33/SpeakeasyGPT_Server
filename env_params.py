@@ -1,6 +1,7 @@
 import os
 
 #TODO Additional params to potentially expose in future
+#TODO Consider using dotenv to simplyfy handling of envrionment variables
 
 def default_variables():
     return {
@@ -11,7 +12,8 @@ def default_variables():
         'sd_url': None,
         'sd_steps': 10,
         'image_output_filename':'./generated_images/output.png',
-        'google_llm_api_timeout': 30
+        'google_llm_api_timeout': 30,
+        'bard_experimental': False,
 
         #'local_model_name': 'google/flan-t5-large',
         #'device_id': 'cpu',

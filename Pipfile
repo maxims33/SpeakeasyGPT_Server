@@ -5,30 +5,33 @@ name = "pypi"
 
 [[source]]
 name = "pytorch"
-#url = "https://download.pytorch.org/whl/torch_stable.html"
-url = "https://download.pytorch.org/whl/cu116"
+url = "https://download.pytorch.org/whl/cu117"
 verify_ssl = false
 
 [packages]
 flask = "*"
 langchain = "*"
 marshmallow = "*"
-bardapi = "*"
 marshmallow-enum = "*"
 openai = "*"
 huggingface-hub = "*"
 transformers = "==4.26.1"
 sentence-transformers = "*"
-torch = {index = "pytorch", version = "==1.13.1+cu116"}
-torchvision = {index = "pytorch", version = "==0.14.1+cu116"}
-torchaudio = {index = "pytorch", version = "==0.13.1+cu116"}
+torch = {index = "pytorch", version = "==1.13.1+cu117"}
+torchvision = {index = "pytorch", version = "==0.14.1+cu117"}
 pytorch-lightning = "==2.0.1"
 unstructured = "==0.6.2"
 clip-interrogator = "==0.5.4"
-accelerate = "*"
-chromadb = "*"
+accelerate = "==0.18.0"
 "pdfminer.six" = "*"
-bitsandbytes-windows = "*"
+bitsandbytes = "==0.35.4"
+cython = "==0.29.34"
+chromadb = "*"
+#chromadb = "==0.3.21"
+clickhouse-connect = "==0.5.22"
+#bardapi = {git = "https://github.com/dsdanielpark/Bard-API.git"}
+bardapi = "*"
+google-cloud-aiplatform = "*"
 
 [dev-packages]
 

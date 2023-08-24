@@ -1,6 +1,6 @@
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Chroma
-from .customloaders import CustomCaptionLoader
+from .customloaders import CustomCaptionLoader, DirectoryCaptionLoader
 from langchain.document_loaders import (
         DirectoryLoader, 
         TextLoader, 
@@ -9,10 +9,10 @@ from langchain.document_loaders import (
         UnstructuredPDFLoader,
         UnstructuredHTMLLoader,
         UnstructuredPowerPointLoader,
-        UnstructuredWordDocumentLoader
+        UnstructuredWordDocumentLoader,
+        ImageCaptionLoader
 )
 
-#TODO Chromadb in pipenv giving warning about C functions, unlike the one installed with pip
 
 def load_document_helper(folder_path, file_ext, loader_class, text_splitter = None):
     loader = DirectoryLoader(folder_path, glob=file_ext, loader_cls=loader_class)
@@ -51,8 +51,8 @@ def load_document_db(factory, persist_dir):
 
 # Initialize the Image VectorStore
 def init_image_db(factory,  file_path, persist_dir):
-    docs = load_document_helper(file_path, "./*.jpg", CustomCaptionLoader)
-    docs += load_document_helper(file_path, "./*.png", CustomCaptionLoader)
+    docs = DirectoryCaptionLoader(file_path = file_path, glob = "./*.jpg").load()
+    docs += DirectoryCaptionLoader(file_path = file_path, glob = "./*.png").load()
     return create_image_db(factory, docs, persist_dir = persist_dir)
 
 def create_image_db(factory, docs, persist_dir):

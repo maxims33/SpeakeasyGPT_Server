@@ -1,0 +1,11 @@
+.gcloudignore
+.git
+.gitignore
+Pipfile
+Pipfile.*
+__pycache__/
+*.sh
+img_embeddings/
+generated_images/
+hf_cache/
+tmp/
