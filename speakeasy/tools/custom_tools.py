@@ -83,8 +83,8 @@ class CustomInstructLLMTool(CustomBaseTool):
     def __init__(self, fact, return_direct = False):
         super().__init__(fact,
                 name="Instruct_LLM",
-                description="Use this tool to when instructed to generate content 
-                (like writing an email/letter/prompt), or for searching for information online.",
+                description="Use this tool to when instructed to generate content "
+                "(like writing an email/letter/prompt), or for searching for information online.",
                 return_direct = return_direct
             )
 

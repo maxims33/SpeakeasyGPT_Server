@@ -39,7 +39,7 @@ class CustomGenerateImageTool(CustomBaseTool): # pylint: disable=too-few-public-
         self.output_filename = output_filename
         self.save_image = save_image
 
-    def save_Image_As_png(self, image_base_64 : str, image_str : str):
+    def save_image_As_png(self, image_base_64 : str, image_str : str):
         """
         Saving as a PNG. Getting PNG info via API also
         Is there a good reason to (re-)save it to file?
@@ -62,7 +62,7 @@ class CustomGenerateImageTool(CustomBaseTool): # pylint: disable=too-few-public-
         for i in resp['images']: # Assumes single image
             image_base_64 = i.split(",",1)[0]
             if self.save_image is True:
-                self.save_Image_As_png(image_base_64, i)
+                self.save_image_As_png(image_base_64, i)
             return f'BASE64ENCODED:{image_base_64}'
         return 'Ooops, No image generated.'
 
