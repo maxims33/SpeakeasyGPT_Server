@@ -3,7 +3,7 @@ Module for various types of LLM Factory
 #TODO Exploring ChatBard and session/conversation management. Also ChatOpenAI
 #TODO Exploring the Callback functionality - E.g.: StdOut Callback Streaming
 #TODO Exploring the Async functionality
-#TODO Add Factory for using text-generation, AutoModelForCausalLM as opposed to text2text-generation, Seq2SeqLLMs
+#TODO Add Factory for using text-generation, AutoModelForCausalLM
 #TODO Add Factory for Using LLama specific classes when dealing with Llama, GPT4All models
 #TODO How to get load_in_8bit=True working in windows? Can it only work with quantized models?
 """
@@ -55,7 +55,8 @@ def init_factory_from_type(llm_type, env_config):
         case LLMType.GOOGLE:
             fact = GoogleLLMFactory(env_config = env_config)
         case LLMType.BARD:
-            fact = BardLLMFactory(env_config = env_config, api_timeout = env_config['google_llm_api_timeout'])
+            fact = BardLLMFactory(env_config = env_config,
+                api_timeout = env_config['google_llm_api_timeout'])
         case _:
             fact = LocalLLMFactory(env_config = env_config)
     return fact
@@ -76,7 +77,13 @@ class LLMFactory():
     max_length = 512
     max_k = 1
 
-    def __init__(self, model_name = "", temperature = 0, max_length = 512, max_k = 1, env_config = None):
+    def __init__(self,
+            model_name = "",
+            temperature = 0,
+            max_length = 512,
+            max_k = 1,
+            env_config = None
+            ):
         self.env_config = env_config
         self.model_name = model_name
         self.temperature = temperature
@@ -99,7 +106,7 @@ class LLMFactory():
     def code_support(self) -> bool:
         """ Added to attempt add support for Bardapi Experimental Features """
         return False
- 
+
 class LLMAndEmbeddingsFactory(LLMFactory):
     """ Abstract factory for LLM components and embeddings """
     def __init__(self,
@@ -118,8 +125,7 @@ class LLMAndEmbeddingsFactory(LLMFactory):
         self.construct_embeddings()
 
     def __repr__(self):
-        return f"<LLMFAndEmbeddingFactory(model_name={self.model_name}, "
-        f"embedding_model_name={self.embedding_model_name})>"
+        return f"<LLMFAndEmbeddingFactory(model_name={self.model_name}, embedding_model_name={self.embedding_model_name})>"
 
     def construct_llm(self):
         """ Construct the LLM """
@@ -142,7 +148,7 @@ class OpenAIFactory(LLMAndEmbeddingsFactory):
         super().__init__(max_k = OpenAIFactory.max_k, env_config = env_config)
 
     def __repr__(self):
-        return '<OpenAIFactory(model_name=NA)>'.format(self=self)
+        return "<OpenAIFactory(model_name=NA)>"
 
     def construct_llm(self):
         """ LLM constructor method """
@@ -165,8 +171,7 @@ class HuggingFaceFactory(LLMAndEmbeddingsFactory):
             )
 
     def __repr__(self):
-        return f"<HuggingFaceFactory(model_name={self.model_name}), "
-        f"embedding_model_name={self.embedding_model_name}>"
+        return f"<HuggingFaceFactory(model_name={self.model_name}), embedding_model_name={self.embedding_model_name}>"
 
     def construct_llm(self):
         """ LLM constructor method """
@@ -190,8 +195,7 @@ class LocalLLMFactory(LLMAndEmbeddingsFactory):
         super().__init__(env_config = env_config, model_name = model_name)
 
     def __repr__(self):
-        return f"<LocalLLMFactory(model_name={self.model_name}, "
-        f"embedding_model_name={self.embedding_model_name})>"
+        return f"<LocalLLMFactory(model_name={self.model_name}, embedding_model_name={self.embedding_model_name})>"
 
     def construct_llm_from_id(self):
         """ LLM constructor method """
@@ -247,7 +251,7 @@ class GoogleLLMFactory(LLMAndEmbeddingsFactory):
         super().__init__(max_k = max_k, model_name = model_name, env_config = env_config)
 
     def __repr__(self):
-        return '<GoogleLLMFactory(model_name={self.model_name})>'.format(self=self)
+        return f"<GoogleLLMFactory(model_name={self.model_name})>"
 
     def construct_llm(self):
         """ LLM constructor method """
@@ -267,15 +271,18 @@ class GoogleLLMFactory(LLMAndEmbeddingsFactory):
 class BardLLMFactory(LLMAndEmbeddingsFactory):
     """
     Factory for Bard
-    Assumes API key is already set as environment variable, for example using os.environ['_BARD_API_KEY']="xxxxxxxx"
-    Set environment variable BARD_EXPERIMENTAL to True for using Bardapi Experimental features (assumes using github branch of Bardapi)
+    Assumes API key is already set as environment variable,
+    for example using os.environ['_BARD_API_KEY']="xxxxxxxx"
+    Set environment variable BARD_EXPERIMENTAL to True for using Bardapi Experimental features
+    (assumes using github branch of Bardapi)
     """
     def __init__(self, env_config = None, api_timeout = 30):
         self.api_timeout = api_timeout
         super().__init__(env_config = env_config)
 
     def __repr__(self):
-        return f"<BardLLMFactory(model_name=Bard), embedding_model_name={self.embedding_model_name}>"
+        return f"""<BardLLMFactory(model_name=Bard), 
+embedding_model_name={self.embedding_model_name}>"""
 
     def construct_llm(self):
         """ LLM constructor method """
