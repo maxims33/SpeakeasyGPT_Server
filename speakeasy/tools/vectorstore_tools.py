@@ -18,7 +18,7 @@ class CustomDocumentQueryTool(CustomBaseTool): # pylint: disable=too-few-public-
                 return_direct = return_direct
             )
 
-def _run(self, query: str) -> str:
+    def _run(self, query: str) -> str:
         """Use the tool."""
         chain = RetrievalQA.from_chain_type(llm=self.factory.llm,
             chain_type="stuff",
@@ -26,6 +26,9 @@ def _run(self, query: str) -> str:
             input_key="question",
             return_source_documents=True)
         return chain(query)['result'] # Should enhance to return the source document paths
+
+    async def _arun(self, query: str) -> str:
+        raise NotImplementedError("does not support async")
 
 class CustomImageQueryTool(CustomBaseTool): # pylint: disable=too-few-public-methods
     """
@@ -38,7 +41,7 @@ class CustomImageQueryTool(CustomBaseTool): # pylint: disable=too-few-public-met
                 db = vdb,
                 return_direct = return_direct
             )
-    
+
     def _run(self, query: str) -> str:
         chain = RetrievalQA.from_chain_type(llm=self.factory.llm,
             chain_type="stuff",
@@ -46,3 +49,6 @@ class CustomImageQueryTool(CustomBaseTool): # pylint: disable=too-few-public-met
             input_key="question",
             return_source_documents=True)
         return chain(query)['result']
+
+    async def _arun(self, query: str) -> str:
+        raise NotImplementedError("does not support async")
