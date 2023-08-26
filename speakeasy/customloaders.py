@@ -25,10 +25,10 @@ class CustomCaptionLoader(BaseLoader): #pylint: disable=too-few-public-methods
         """
         try:
             from clip_interrogator import Config, Interrogator #pylint: disable=import-outside-toplevel
-        except ImportError as exec:
+        except ImportError as exec1:
             raise ValueError(
                 "Raising Exception. Missing clip_interrogator moddule"
-            ) from exec
+            ) from exec1
 
         config = Config(clip_model_name="ViT-L-14/openai",
             blip_model_type='blip-large',
