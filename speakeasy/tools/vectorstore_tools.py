@@ -6,7 +6,7 @@ Module with tools for document Q & A.
 from langchain.chains import RetrievalQA
 from .custom_tools import CustomBaseTool
 
-class CustomDocumentQueryTool(CustomBaseTool):
+class CustomDocumentQueryTool(CustomBaseTool): # pylint: disable=too-few-public-methods
     """
     Class representing tools for document Q & A.
     """
@@ -17,7 +17,8 @@ class CustomDocumentQueryTool(CustomBaseTool):
                 db = vdb,
                 return_direct = return_direct
             )
-    def _run(self, query: str) -> str:
+
+def _run(self, query: str) -> str:
         """Use the tool."""
         chain = RetrievalQA.from_chain_type(llm=self.factory.llm,
             chain_type="stuff",
@@ -26,7 +27,7 @@ class CustomDocumentQueryTool(CustomBaseTool):
             return_source_documents=True)
         return chain(query)['result'] # Should enhance to return the source document paths
 
-class CustomImageQueryTool(CustomBaseTool):
+class CustomImageQueryTool(CustomBaseTool): # pylint: disable=too-few-public-methods
     """
     Class representing tools for image Q & A (based on captions previously generated)
     """
@@ -37,6 +38,7 @@ class CustomImageQueryTool(CustomBaseTool):
                 db = vdb,
                 return_direct = return_direct
             )
+    
     def _run(self, query: str) -> str:
         chain = RetrievalQA.from_chain_type(llm=self.factory.llm,
             chain_type="stuff",
