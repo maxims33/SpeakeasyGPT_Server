@@ -9,7 +9,7 @@ import requests
 from PIL import Image, PngImagePlugin
 from .custom_tools import CustomBaseTool
 
-class CustomGenerateImageTool(CustomBaseTool): # pylint: disable=too-few-public-methods
+class CustomGenerateImageTool(CustomBaseTool):
     """
     Class representing a tool used for generating image using stable diffusion API
     Note that Automatic1111 should be run using -api flag
@@ -19,7 +19,7 @@ class CustomGenerateImageTool(CustomBaseTool): # pylint: disable=too-few-public-
     output_filename : str = None
     save_image = True
 
-    def __init__(self, fact, #pylint: disable=too-many-arguments
+    def __init__(self, fact,
             vdb = None,
             return_direct = False,
             api_url = None,
@@ -69,7 +69,7 @@ class CustomGenerateImageTool(CustomBaseTool): # pylint: disable=too-few-public-
     async def _arun(self, query: str) -> str:
         raise NotImplementedError("does not support async")
 
-class SearchImageTool(CustomBaseTool): # pylint: disable=too-few-public-methods
+class SearchImageTool(CustomBaseTool):
     """
      Class which searches and returns images - Only supported with Bard Experimental
     """

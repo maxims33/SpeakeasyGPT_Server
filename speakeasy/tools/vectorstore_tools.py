@@ -6,7 +6,7 @@ Module with tools for document Q & A.
 from langchain.chains import RetrievalQA
 from .custom_tools import CustomBaseTool
 
-class CustomDocumentQueryTool(CustomBaseTool): # pylint: disable=too-few-public-methods
+class CustomDocumentQueryTool(CustomBaseTool):
     """
     Class representing tools for document Q & A.
     """
@@ -30,7 +30,7 @@ class CustomDocumentQueryTool(CustomBaseTool): # pylint: disable=too-few-public-
     async def _arun(self, query: str) -> str:
         raise NotImplementedError("does not support async")
 
-class CustomImageQueryTool(CustomBaseTool): # pylint: disable=too-few-public-methods
+class CustomImageQueryTool(CustomBaseTool):
     """
     Class representing tools for image Q & A (based on captions previously generated)
     """

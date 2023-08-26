@@ -8,7 +8,7 @@ from langchain.docstore.document import Document
 from langchain.document_loaders import DirectoryLoader
 from langchain.document_loaders.base import BaseLoader
 
-class CustomCaptionLoader(BaseLoader): #pylint: disable=too-few-public-methods
+class CustomCaptionLoader(BaseLoader):
     """ Load captions of images """
     def __init__(
         self,
@@ -47,7 +47,7 @@ class CustomCaptionLoader(BaseLoader): #pylint: disable=too-few-public-methods
             doc_list.append(doc)
         return doc_list
 
-class DirectoryCaptionLoader(DirectoryLoader): #pylint: disable=too-few-public-methods
+class DirectoryCaptionLoader(DirectoryLoader):
     """ Load directoy of captions of images """
     def __init__(self, file_path, glob="./*"):
         super().__init__(file_path, glob = glob, loader_cls = None)

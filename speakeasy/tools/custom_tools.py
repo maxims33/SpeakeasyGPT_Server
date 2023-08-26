@@ -9,14 +9,14 @@ from langchain.chains.llm_math.prompt import PROMPT
 from langchain.vectorstores.base import VectorStore
 from speakeasy.llmfactory import LLMFactory
 
-class CustomBaseTool(Tool): #pylint: disable=too-few-public-methods
+class CustomBaseTool(Tool):
     """
     Base class for custom tools
     """
     factory : LLMFactory = None
     vector_db : VectorStore = None
 
-    def __init__(self, fact, name, description, #pylint: disable=too-many-arguments
+    def __init__(self, fact, name, description,
             vdb = None, return_direct = False):
         super().__init__(
                 return_direct = return_direct,
@@ -45,7 +45,7 @@ class CustomBaseTool(Tool): #pylint: disable=too-few-public-methods
 # ------------------------------------------------------------------------
 
 
-class RunCodeTool(CustomBaseTool): #pylint: disable=too-few-public-methods
+class RunCodeTool(CustomBaseTool):
     """
      Class representing tool for executing (python) code - Only supported with Bard Experimental
     """
@@ -66,7 +66,7 @@ class RunCodeTool(CustomBaseTool): #pylint: disable=too-few-public-methods
         """Use the tool asynchronously."""
         raise NotImplementedError("does not support async")
 
-class CustomMathTool(CustomBaseTool): #pylint: disable=too-few-public-methods
+class CustomMathTool(CustomBaseTool):
     """
     Class representing tool for math operations using expression evaluation
     """
@@ -86,7 +86,7 @@ class CustomMathTool(CustomBaseTool): #pylint: disable=too-few-public-methods
         """Use the tool asynchronously."""
         raise NotImplementedError("does not support async")
 
-class CustomInstructLLMTool(CustomBaseTool): #pylint: disable=too-few-public-methods
+class CustomInstructLLMTool(CustomBaseTool):
     """
     Class representing a tool used for generating content - Simply queries the LLM
     """

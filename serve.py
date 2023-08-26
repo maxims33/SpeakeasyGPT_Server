@@ -3,7 +3,7 @@ Flask rest service implementation
 """
 
 import langchain
-from flask import Flask, jsonify, request
+from flask import Flask, request
 from marshmallow import Schema, fields, post_load
 from marshmallow_enum import EnumField
 from langchain.chains import RetrievalQA
@@ -78,7 +78,7 @@ def format_response(respstr):
 
     # Basic image handling
     image_tag = 'BASE64ENCODED:'
-    if respstr.startswith(imageTag):
+    if respstr.startswith(image_tag):
         respobj.response = 'Here is the image.'
         respobj.image = respstr[len(image_tag):] # Strip BASE64ENCODED:
 
