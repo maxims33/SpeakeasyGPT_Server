@@ -35,12 +35,12 @@ convo_agent = init_conversational_agent(factory, doc_db, img_db)
 
 # ------- Serializing / Deserializing ------------------
 
-class Request(object):
+class Request():
     """ Request object and handlers """
     def __init__(self, prompt, llm_type = None):
         self.prompt = prompt
         self.llm_type = llm_type # if None should then use whichever factory instantiated at start
- 
+
 class RequestSchema(Schema):
     """ Request schema """
     prompt = fields.Str(required=True)
@@ -50,7 +50,7 @@ class RequestSchema(Schema):
         by_value=True,
         allow_none=True) # Not sure exactly which did the trick
     @post_load()
-    def make_request(self, data, **kwargs):
+    def make_request(self, data):
         """ Instantiate the Request object """
         return Request(**data)
 
@@ -59,7 +59,7 @@ def deserialize_request(req_json):
     return RequestSchema(partial=True).load(req_json.get_json())
 
 # Response class and hanlders
-class Response(object):
+class Response():
     """ Response object """
     def __init__(self, resp, image = None):
         self.response = resp
@@ -77,10 +77,10 @@ def format_response(respstr):
     respobj = Response(respstr)
 
     # Basic image handling
-    imageTag = 'BASE64ENCODED:'
+    image_tag = 'BASE64ENCODED:'
     if respstr.startswith(imageTag):
         respobj.response = 'Here is the image.'
-        respobj.image = respstr[len(imageTag):] # Strip BASE64ENCODED:
+        respobj.image = respstr[len(image_tag):] # Strip BASE64ENCODED:
 
     return schema.dump(respobj)
 
@@ -119,44 +119,44 @@ def query_llm():
     """ endpoint for basic LLM prompt """
     try:
         req = deserialize_request(request)
-        fa = choose_factory(req)
-        print(f"Factory: {fa}")
-        return format_response(fa.llm(req.prompt))
-    except Exception as e:
-        print(f"Caught exception: {e}")
-        return format_response(f'Oops sorry an error occured.')
+        fact = choose_factory(req)
+        print(f"Factory: {fact}")
+        return format_response(fact.llm(req.prompt))
+    except Exception as exc:
+        print(f"Caught exception: {exc}")
+        return format_response('Oops sorry an error occured.')
 
 @app.route("/search_docs", methods=['POST'])
 def search_docs():
     """ endpoint for querying the document vectorstore """
     try:
         req = deserialize_request(request)
-        fa = choose_factory(req)
-        chain = RetrievalQA.from_chain_type(llm=fa.llm,
+        fact = choose_factory(req)
+        chain = RetrievalQA.from_chain_type(llm=fact.llm,
             chain_type="stuff",
             retriever=doc_db.as_retriever(search_kwargs={"k":factory.max_k}),
             input_key="question",
             return_source_documents=True)
         return format_response(chain(req.prompt)['result'])
-    except Exception as e:
-        print(f"Caught exception: {e}")
-        return format_response(f'Oops sorry an error occured.')
+    except Exception as exc:
+        print(f"Caught exception: {exc}")
+        return format_response('Oops sorry an error occured.')
 
 @app.route("/search_images", methods=['POST'])
 def search_images():
     """ endpoint for querying the image vectorstore """
     try:
         req = deserialize_request(request)
-        fa = choose_factory(req)
-        chain = RetrievalQA.from_chain_type(llm=fa.llm,
+        fact = choose_factory(req)
+        chain = RetrievalQA.from_chain_type(llm=fact.llm,
             chain_type="stuff",
             retriever=img_db.as_retriever(search_kwargs={"k":factory.max_k}),
             input_key="question",
             return_source_documents=True)
         return format_response(chain(req.prompt)['result'])
-    except Exception as e:
-        print(f"Caught exception: {e}")
-        return format_response(f'Oops sorry an error occured.')
+    except Exception as exc:
+        print(f"Caught exception: {exc}")
+        return format_response('Oops sorry an error occured.')
 
 @app.route("/run_agent", methods=['POST'])
 def run_agent():
@@ -164,9 +164,9 @@ def run_agent():
     try:
         req = deserialize_request(request)
         return format_response(agent.run(req.prompt))
-    except Exception as e:
-        print(f"Caught exception: {e}")
-        return format_response(f'Oops sorry an error occured.')
+    except Exception as exc:
+        print(f"Caught exception: {exc}")
+        return format_response('Oops sorry an error occured.')
 
 @app.route("/run_convo_agent", methods=['POST'])
 def run_convo_agent():
@@ -174,9 +174,9 @@ def run_convo_agent():
     try:
         req = deserialize_request(request)
         return format_response(convo_agent.run(input=req.prompt))
-    except Exception as e:
-        print(f"Caught exception: {e}")
-        return format_response(f'Oops sorry an error occured.')
+    except Exception as exc:
+        print(f"Caught exception: {exc}")
+        return format_response('Oops sorry an error occured.')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
