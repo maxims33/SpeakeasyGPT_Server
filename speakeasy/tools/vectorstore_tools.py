@@ -1,21 +1,20 @@
 """
 Module with tools for document Q & A.
+#TODO Consider merging Image and Document query into Vectorstore router
 """
 
 from langchain.chains import RetrievalQA
 from .custom_tools import CustomBaseTool
 
-#TODO Consider merging Image and Document query into Vectorstore router
-
 class CustomDocumentQueryTool(CustomBaseTool):
     """
     Class representing tools for document Q & A.
     """
-    def __init__(self, fa, db, return_direct = False):
-        super(CustomDocumentQueryTool, self).__init__(fa,
+    def __init__(self, fact, vdb, return_direct = False):
+        super().__init__(fact,
                 name="Document_Query",
                 description="Use this tool only to query about documents stored LOCALLY",
-                db = db,
+                db = vdb,
                 return_direct = return_direct
             )
     def _run(self, query: str) -> str:
@@ -31,11 +30,11 @@ class CustomImageQueryTool(CustomBaseTool):
     """
     Class representing tools for image Q & A (based on captions previously generated)
     """
-    def __init__(self, fa, db , return_direct = False):
-        super(CustomImageQueryTool, self).__init__(fa,
+    def __init__(self, fact, vdb , return_direct = False):
+        super().__init__(fact,
                 name="Image_Query",
                 description="Use this tool to only query the captions of images stored LOCALLY",
-                db = db,
+                db = vdb,
                 return_direct = return_direct
             )
     def _run(self, query: str) -> str:
