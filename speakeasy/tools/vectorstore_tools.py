@@ -14,7 +14,7 @@ class CustomDocumentQueryTool(CustomBaseTool): # pylint: disable=too-few-public-
         super().__init__(fact,
                 name="Document_Query",
                 description="Use this tool only to query about documents stored LOCALLY",
-                db = vdb,
+                vdb = vdb,
                 return_direct = return_direct
             )
 
@@ -38,7 +38,7 @@ class CustomImageQueryTool(CustomBaseTool): # pylint: disable=too-few-public-met
         super().__init__(fact,
                 name="Image_Query",
                 description="Use this tool to only query the captions of images stored LOCALLY",
-                db = vdb,
+                vdb = vdb,
                 return_direct = return_direct
             )
 
