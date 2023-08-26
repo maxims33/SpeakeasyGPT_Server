@@ -47,7 +47,7 @@ def init_document_db(factory, file_path, persist_dir, chunk_size = 1500, chunk_o
     texts += load_document_helper(file_path, "./*.txt",
         TextLoader, text_splitter)
     return create_document_db(factory, texts, persist_dir = persist_dir)
-    
+
 def create_document_db(factory, texts, persist_dir):
     """ Create the VectorStore DB """
     if len(texts) > 0:

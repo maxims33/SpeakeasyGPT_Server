@@ -1,3 +1,7 @@
+"""
+Flask rest service implementation
+"""
+
 import langchain
 from flask import Flask, jsonify, request
 from marshmallow import Schema, fields, post_load
@@ -7,7 +11,6 @@ from speakeasy.llmfactory import LLMType, init_factory, init_factory_from_type
 from speakeasy.customagents import init_agent, init_conversational_agent
 from speakeasy.indexes import load_document_db, load_image_db
 from env_params import parse_environment_variables
-
 
 # Flask app
 app = Flask(__name__)
@@ -32,34 +35,44 @@ convo_agent = init_conversational_agent(factory, doc_db, img_db)
 
 # ------- Serializing / Deserializing ------------------
 
-# Request class and handlers
 class Request(object):
+    """ Request object and handlers """
     def __init__(self, prompt, llm_type = None):
         self.prompt = prompt
-        self.llm_type = llm_type # optional field - if None should then use whichever factory instantiated at start
+        self.llm_type = llm_type # if None should then use whichever factory instantiated at start
  
 class RequestSchema(Schema):
+    """ Request schema """
     prompt = fields.Str(required=True)
-    llm_type = EnumField(LLMType, required=False, missing=None, by_value=True, allow_none=True) # Not sure exactly which did the trick
+    llm_type = EnumField(LLMType,
+        required=False,
+        missing=None,
+        by_value=True,
+        allow_none=True) # Not sure exactly which did the trick
     @post_load()
     def make_request(self, data, **kwargs):
+        """ Instantiate the Request object """
         return Request(**data)
 
 def deserialize_request(req_json):
-    return RequestSchema(partial=True).load(req_json.get_json()) 
+    """ Deserielze the request json """
+    return RequestSchema(partial=True).load(req_json.get_json())
 
 # Response class and hanlders
 class Response(object):
+    """ Response object """
     def __init__(self, resp, image = None):
         self.response = resp
-        if not image == None:
+        if not image is None:
             self.image = image
 
 class ResponseSchema(Schema):
+    """ The response schema"""
     response = fields.Str()
     image = fields.Str()
 
 def format_response(respstr):
+    """ format the response json """
     schema = ResponseSchema(many=False, partial=True)
     respobj = Response(respstr)
 
@@ -82,11 +95,11 @@ factory_dict = {
 }
 factory_dict[str(LLMType(env_config['factory_type']))] = factory
 
-# Not applicable for agents since these were initialised at start up
 def choose_factory(req):
-    if req.llm_type == None:
+    """ Not applicable for agents since these were initialised at start up """
+    if req.llm_type is None:
         return factory
-    if not factory_dict[str(req.llm_type)] == None:
+    if not factory_dict[str(req.llm_type)] is None:
         return factory_dict[str(req.llm_type)]
 
     # Instansiate new factory since not found in dict
@@ -98,10 +111,12 @@ def choose_factory(req):
 
 @app.route("/")
 def ping():
+    """ endpoint to verify services are alive """
     return format_response("Ping.")
 
 @app.route("/query", methods=['GET', 'POST'])
 def query_llm():
+    """ endpoint for basic LLM prompt """
     try:
         req = deserialize_request(request)
         fa = choose_factory(req)
@@ -109,16 +124,17 @@ def query_llm():
         return format_response(fa.llm(req.prompt))
     except Exception as e:
         print(f"Caught exception: {e}")
-        return format_response(f'Oops sorry an error occured.') 
+        return format_response(f'Oops sorry an error occured.')
 
 @app.route("/search_docs", methods=['POST'])
 def search_docs():
+    """ endpoint for querying the document vectorstore """
     try:
         req = deserialize_request(request)
         fa = choose_factory(req)
-        chain = RetrievalQA.from_chain_type(llm=fa.llm, 
-            chain_type="stuff", 
-            retriever=doc_db.as_retriever(search_kwargs={"k":factory.max_k}), 
+        chain = RetrievalQA.from_chain_type(llm=fa.llm,
+            chain_type="stuff",
+            retriever=doc_db.as_retriever(search_kwargs={"k":factory.max_k}),
             input_key="question",
             return_source_documents=True)
         return format_response(chain(req.prompt)['result'])
@@ -128,6 +144,7 @@ def search_docs():
 
 @app.route("/search_images", methods=['POST'])
 def search_images():
+    """ endpoint for querying the image vectorstore """
     try:
         req = deserialize_request(request)
         fa = choose_factory(req)
@@ -143,6 +160,7 @@ def search_images():
 
 @app.route("/run_agent", methods=['POST'])
 def run_agent():
+    """ endpoint for zero / few shot agent """
     try:
         req = deserialize_request(request)
         return format_response(agent.run(req.prompt))
@@ -152,13 +170,13 @@ def run_agent():
 
 @app.route("/run_convo_agent", methods=['POST'])
 def run_convo_agent():
+    """ endpoint for conversational agent"""
     try:
         req = deserialize_request(request)
-        return format_response(convo_agent.run(input=req.prompt)) 
+        return format_response(convo_agent.run(input=req.prompt))
     except Exception as e:
         print(f"Caught exception: {e}")
         return format_response(f'Oops sorry an error occured.')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
-
