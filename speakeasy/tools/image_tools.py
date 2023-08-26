@@ -19,7 +19,7 @@ class CustomGenerateImageTool(CustomBaseTool): # pylint: disable=too-few-public-
     output_filename : str = None
     save_image = True
 
-    def __init__(self, fact,
+    def __init__(self, fact, #pylint: disable=too-many-arguments
             vdb = None,
             return_direct = False,
             api_url = None,
@@ -39,10 +39,13 @@ class CustomGenerateImageTool(CustomBaseTool): # pylint: disable=too-few-public-
         self.output_filename = output_filename
         self.save_image = save_image
 
-    def saveImageAsPNG(self, imageBase64 : str, imageStr : str):
-        """Saving as a PNG. Getting PNG info via API also - Is there a good reason to (re-)save it to file?"""
-        image = Image.open(io.BytesIO(base64.b64decode(imageBase64)))
-        png_payload = {"image": "data:image/png;base64," + imageStr}
+    def save_Image_As_PNG(self, image_base_64 : str, image_str : str):
+        """
+        Saving as a PNG. Getting PNG info via API also
+        Is there a good reason to (re-)save it to file?
+        """
+        image = Image.open(io.BytesIO(base64.b64decode(image_base_64)))
+        png_payload = {"image": "data:image/png;base64," + image_str}
         response2 = requests.post(url=f'{self.api_url}/sdapi/v1/png-info', json=png_payload)
         pnginfo = PngImagePlugin.PngInfo()
         pnginfo.add_text("parameters", response2.json().get("info"))
@@ -55,12 +58,12 @@ class CustomGenerateImageTool(CustomBaseTool): # pylint: disable=too-few-public-
         payload = { "prompt": query, "steps": self.generation_steps }
         response = requests.post(url=f'{self.api_url}/sdapi/v1/txt2img', json=payload)
         # Check response codes, handle errors
-        r = response.json()
-        for i in r['images']: # Assumes single image
-            imageBase64 = i.split(",",1)[0]
+        resp = response.json()
+        for i in resp['images']: # Assumes single image
+            image_base_64 = i.split(",",1)[0]
             if self.save_image is True:
-                self.saveImageAsPNG(imageBase64, i)
-            return f'BASE64ENCODED:{imageBase64}'
+                self.save_Image_As_PNG(image_base_64, i)
+            return f'BASE64ENCODED:{image_base_64}'
         return 'Ooops, No image generated.'
 
     async def _arun(self, query: str) -> str:
