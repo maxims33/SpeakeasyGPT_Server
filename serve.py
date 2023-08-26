@@ -50,7 +50,7 @@ class RequestSchema(Schema):
         by_value=True,
         allow_none=True) # Not sure exactly which did the trick
     @post_load()
-    def make_request(self, data):
+    def make_request(self, data, **kwargs): #pylint: disable=unused-argument
         """ Instantiate the Request object """
         return Request(**data)
 
