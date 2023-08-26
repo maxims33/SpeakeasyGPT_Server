@@ -16,9 +16,10 @@ from .tools.custom_tools import CustomInstructLLMTool, CustomMathTool, RunCodeTo
 from .tools.vectorstore_tools import CustomDocumentQueryTool, CustomImageQueryTool
 from .tools.image_tools import CustomGenerateImageTool, SearchImageTool
 
-class CustomBaseAgent(object):
+class CustomBaseAgent():
     """ Base class for customer agents """
-    def _handle_agent_error(self, error) -> str:
+    def handle_agent_error(self, error) -> str:
+        """ Error handler method """
         print("THE OUTPUT FORMAT IS INCORRECT!")
         return f"CHECK YOUR OUTPUT FORMAT! {str(error)[:200]}"
 
@@ -45,13 +46,13 @@ class CustomBardAgent(CustomBaseAgent):
             return AgentFinish(
                 {"output": "Agent stopped due to iteration limit or time limit."}, ""
             )
-        elif early_stopping_method == "generate":
+        if early_stopping_method == "generate":
             # Generate does one final forward pass
             thoughts = ""
             for action, observation in intermediate_steps:
                 thoughts += action.log
                 thoughts += (
-                    f"\n{self.observation_prefix}{observation}\n{self.llm_prefix}"
+                    f"\n{self.observation_prefix}{observation}\n{self.llm_prefix}" #pylint disable=no-member
                 )
             # Adding to the previous steps, we now tell the LLM to make a final pred
             thoughts += (
@@ -60,9 +61,9 @@ class CustomBardAgent(CustomBaseAgent):
             )
             new_inputs = {"agent_scratchpad": thoughts, "stop":None} #Setting stop to None
             full_inputs = {**kwargs, **new_inputs}
-            full_output = self.llm_chain.predict(**full_inputs)
+            full_output = self.llm_chain.predict(**full_inputs) #pylint disable=no-member
             # We try to extract a final answer
-            parsed_output = self.output_parser.parse(full_output)
+            parsed_output = self.output_parser.parse(full_output) #pylint disable=no-member
             if isinstance(parsed_output, AgentFinish):
                 # If we can extract, we send the correct stuff
                 return parsed_output
@@ -79,7 +80,7 @@ class CustomBardAgent(CustomBaseAgent):
 class CustomSingleActionAgent(CustomBaseAgent, ZeroShotAgent):
     """ Custom single action agents """
     def __init__(self, llm_chain, allowed_tools, verbose):
-        super(CustomSingleActionAgent, self).__init__(llm_chain=llm_chain,
+        super().__init__(llm_chain=llm_chain,
                 allowed_tools=allowed_tools,
                 verbose=verbose
         )
@@ -87,7 +88,7 @@ class CustomSingleActionAgent(CustomBaseAgent, ZeroShotAgent):
 class CustomConversationalAgent(CustomBaseAgent, ConversationalAgent):
     """ Custom conversation agent """
     def __init__(self, llm_chain, allowed_tools, verbose):
-        super(CustomConversationalAgent, self).__init__(llm_chain=llm_chain,
+        super().__init__(llm_chain=llm_chain,
             allowed_tools=allowed_tools,
             verbose=verbose
         )
@@ -104,7 +105,7 @@ def base_tools(factory, doc_db, img_db) -> List:
     )
     # Need to pass in max_k
     toolkit = VectorStoreToolkit(llm=factory.llm, vectorstore_info=vectorstore_info)
-    bt = toolkit.get_tools()
+    b_t = toolkit.get_tools()
 
     vectorstore_info = VectorStoreInfo(
         name="Local_Images",
@@ -112,19 +113,19 @@ def base_tools(factory, doc_db, img_db) -> List:
         vectorstore=img_db
     )
     toolkit = VectorStoreToolkit(llm=factory.llm, vectorstore_info=vectorstore_info)
-    bt = bt + toolkit.get_tools()
-    return bt
+    b_t = b_t + toolkit.get_tools()
+    return b_t
 
 def custom_tools(factory, doc_db, img_db, include_base_tools = False) -> List:
     """ Collect the custom tools, and base tools if desired """
-    bt = []
-    if include_base_tools == True:
-        bt = base_tools(factory, doc_db, img_db)
+    b_t = []
+    if include_base_tools is True:
+        b_t = base_tools(factory, doc_db, img_db)
 
-    ct = [
+    c_t = [
         CustomInstructLLMTool(factory),
         CustomMathTool(factory),
-        CustomGenerateImageTool(factory, 
+        CustomGenerateImageTool(factory,
             return_direct=True,
             api_url=factory.env_config['sd_url'],
             generation_steps=factory.env_config['sd_steps'],
@@ -135,7 +136,7 @@ def custom_tools(factory, doc_db, img_db, include_base_tools = False) -> List:
         SearchImageTool(factory, return_direct=True),
         RunCodeTool(factory, return_direct=True)
     ]
-    return ct + bt
+    return c_t + b_t
 
 def default_agent_executor(agent,
         tools,
@@ -152,15 +153,15 @@ def default_agent_executor(agent,
         verbose=verbose,
         max_iterations=max_iterations,
         early_stopping_method=early_stopping_method,
-        handle_parsing_errors=agent._handle_agent_error
+        handle_parsing_errors=agent.handle_agent_error
     )
 
 def init_agent(factory, doc_db, img_db, max_iterations=1, verbose=True, early_stopping_method='generate'):
     """ Initialize Agent - Without memory """
-    prefix = """Answer the following questions or tasks as best you can. Ensure to choose one of the following tools as the 'Action':"""
-    suffix = """You MUST to stick to the format provided above, but do not output the 'Final Answer:' until instructed. Begin!\n
-Question: {input}
-{agent_scratchpad}"""
+#    prefix = """Answer the following questions or tasks as best you can. Ensure to choose one of the following tools as the 'Action':"""
+#    suffix = """You MUST to stick to the format provided above, but do not output the 'Final Answer:' until instructed. Begin!\n
+#Question: {input}
+#{agent_scratchpad}"""
     tools = custom_tools(factory, doc_db, img_db)
     tool_names = [tool.name for tool in tools]
     prompt = CustomSingleActionAgent.create_prompt(tools, input_variables=["input", "agent_scratchpad"]) #prefix=prefix, suffix=suffix,
@@ -175,11 +176,23 @@ Question: {input}
 
 def init_conversational_agent(factory, doc_db, img_db, max_iterations=1, verbose=True, early_stopping_method='generate'):
     """ Initialize Conversational Agent - With memory """
-    prefix = """You are Assistant, a large language model. Assistant is designed to be able to assist with a wide range of tasks, from answering simple questions to providing in-depth explanations and discussions on a wide range of topics. As a language model, Assistant is able to generate human-like text based on the input it receives, allowing it to engage in natural-sounding conversations and provide responses that are coherent and relevant to the topic at hand.
+    prefix = """You are Assistant, a large language model. 
+Assistant is designed to be able to assist with a wide range of tasks, 
+from answering simple questions to providing in-depth explanations and discussions on a wide range of topics. 
+As a language model, Assistant is able to generate human-like text based on the input it receives, 
+allowing it to engage in natural-sounding conversations and provide responses 
+that are coherent and relevant to the topic at hand.
 
-Assistant is constantly learning and improving, and its capabilities are constantly evolving. It is able to process and understand large amounts of text, and can use this knowledge to provide accurate and informative responses to a wide range of questions. Additionally, Assistant is able to generate its own text based on the input it receives, allowing it to engage in discussions and provide explanations and descriptions on a wide range of topics.
+Assistant is constantly learning and improving, and its capabilities are constantly evolving. 
+It is able to process and understand large amounts of text, and can use this knowledge to provide accurate 
+and informative responses to a wide range of questions. 
+Additionally, Assistant is able to generate its own text based on the input it receives, 
+allowing it to engage in discussions and provide explanations and descriptions on a wide range of topics.
 
-Overall, Assistant is a powerful tool that can help with a wide range of tasks and provide valuable insights and information on a wide range of topics. Whether you need help with a specific question or just want to have a conversation about a particular topic, Assistant is here to assist.
+Overall, Assistant is a powerful tool that can help with a wide range of tasks and provide valuable insights
+and information on a wide range of topics. 
+Whether you need help with a specific question or just want to have a conversation about a particular topic, 
+Assistant is here to assist.
 
 TOOLS:
 ------
@@ -214,12 +227,14 @@ Thought: Do I need to use a tool? No
         suffix=suffix,
         format_instructions=instruction_format,
         input_variables=["chat_history", "input", "agent_scratchpad"]
-    ) 
+    )
     llm_chain = LLMChain(llm=factory.llm, prompt=prompt)
-    agent = CustomConversationalAgent(llm_chain=llm_chain, allowed_tools=tool_names, verbose=verbose)
-    mem = memory=ConversationBufferMemory(memory_key="chat_history")
+    agent = CustomConversationalAgent(llm_chain = LLMChain(llm=factory.llm, prompt=prompt),
+        allowed_tools=tool_names,
+        verbose=verbose
+    )
     agent_executor = default_agent_executor(agent, tools,
-            memory=mem,
+            memory=ConversationBufferMemory(memory_key="chat_history"),
             max_iterations=max_iterations,
             verbose=verbose,
             early_stopping_method=early_stopping_method
