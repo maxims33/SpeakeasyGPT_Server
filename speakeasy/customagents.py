@@ -5,7 +5,7 @@ Module defining custom langchain agents
 """
 
 from typing import Any, List, Tuple
-from langchain.agents import initialize_agent, AgentExecutor
+from langchain.agents import AgentExecutor
 from langchain.schema import AgentAction, AgentFinish
 from langchain.agents.mrkl.base import ZeroShotAgent
 from langchain.agents.conversational.base import ConversationalAgent
@@ -71,11 +71,11 @@ class CustomBardAgent(CustomBaseAgent):
             # If we can extract, but the tool is not the final tool,
             # we just return the full output
             return AgentFinish({"output": full_output}, full_output)
-        else:
-            raise ValueError(
-                "early_stopping_method should be one of `force` or `generate`, "
-                f"got {early_stopping_method}"
-            )
+
+        raise ValueError(
+            "early_stopping_method should be one of `force` or `generate`, "
+            f"got {early_stopping_method}"
+        )
 
 class CustomSingleActionAgent(CustomBaseAgent, ZeroShotAgent):
     """ Custom single action agents """
@@ -163,15 +163,17 @@ def init_agent(factory,
         early_stopping_method='generate'
     ):
     """ Initialize Agent - Without memory """
-#    prefix = """Answer the following questions or tasks as best you can. 
+#    prefix = """Answer the following questions or tasks as best you can.
 #Ensure to choose one of the following tools as the 'Action':"""
-#    suffix = """You MUST to stick to the format provided above, 
+#    suffix = """You MUST to stick to the format provided above,
 #but do not output the 'Final Answer:' until instructed. Begin!\n
 #Question: {input}
 #{agent_scratchpad}"""
     tools = custom_tools(factory, doc_db, img_db)
     tool_names = [tool.name for tool in tools]
-    prompt = CustomSingleActionAgent.create_prompt(tools, input_variables=["input", "agent_scratchpad"])
+    prompt = CustomSingleActionAgent.create_prompt(tools,
+        input_variables=["input", "agent_scratchpad"]
+    )
     agent = CustomSingleActionAgent(llm_chain = LLMChain(llm=factory.llm, prompt=prompt),
         allowed_tools=tool_names, verbose=verbose
     )
