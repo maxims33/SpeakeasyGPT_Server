@@ -20,7 +20,7 @@ class CustomBaseAgent(object):
     """ Base class for customer agents """
     def _handle_agent_error(self, error) -> str:
         print("THE OUTPUT FORMAT IS INCORRECT!")
-        returnlass f f"CHECK YOUR OUTPUT FORMAT! {str(error)[:200]}"
+        return f"CHECK YOUR OUTPUT FORMAT! {str(error)[:200]}"
 
 class CustomBardAgent(CustomBaseAgent):
     """ Use only with Bard """
