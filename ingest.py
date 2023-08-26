@@ -12,7 +12,7 @@ from env_params import parse_environment_variables
 def parse_arguments():
     """ Parse the command line arguments """
     parser = argparse.ArgumentParser(description='SpeakEasyGPT - Ingest')
-    parser.add_argument("--ingest-path", "-P", 
+    parser.add_argument("--ingest-path", "-P",
             help='The file path to look for content to ingest', default='./filebox/')
     return parser.parse_args()
 

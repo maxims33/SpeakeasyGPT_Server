@@ -86,7 +86,7 @@ class CustomMathTool(CustomBaseTool): #pylint: disable=too-few-public-methods
         """Use the tool asynchronously."""
         raise NotImplementedError("does not support async")
 
-class CustomInstructLLMTool(CustomBaseTool):#pylint: disable=too-few-public-methods
+class CustomInstructLLMTool(CustomBaseTool): #pylint: disable=too-few-public-methods
     """
     Class representing a tool used for generating content - Simply queries the LLM
     """
