@@ -1,9 +1,12 @@
-import os
-
+"""
 #TODO Additional params to potentially expose in future
 #TODO Consider using dotenv to simplyfy handling of envrionment variables
+"""
+
+import os
 
 def default_variables():
+    """ Setting defaults for all environment variables """
     return {
         'debug': False,
         'docs_persist_directory': './db/',
@@ -27,34 +30,34 @@ def default_variables():
     }
 
 def parse_environment_variables():
+    """ Setting the configured values, if defined """
     env_variables = default_variables()
 
-    if os.environ.get("ENABLE_DEBUG") == 'True' or  os.environ.get("ENABLE_DEBUG") == 'true':
+    if os.environ.get("ENABLE_DEBUG") == 'True' or os.environ.get("ENABLE_DEBUG") == 'true':
         env_variables['debug'] = True
 
-    if not os.environ.get("DOCS_PERSIST_DIRECTORY") == None:
+    if not os.environ.get("DOCS_PERSIST_DIRECTORY") is None:
         env_variables['docs_persist_directory'] = os.environ.get("DOCS_PERSIST_DIRECTORY")
 
-    if not os.environ.get("IMAGES_PERSIST_DIRECTORY") == None:
+    if not os.environ.get("IMAGES_PERSIST_DIRECTORY") is None:
         env_variables['images_persist_directory'] = os.environ.get("IMAGES_PERSIST_DIRECTORY")
 
-    if not os.environ.get("FACTORY_TYPE") == None:
+    if not os.environ.get("FACTORY_TYPE") is None:
         env_variables['factory_type'] = os.environ.get("FACTORY_TYPE")
 
-    if not os.environ.get("LOCAL_MODEL_NAME") == None:
+    if not os.environ.get("LOCAL_MODEL_NAME") is None:
         env_variables['local_model_name'] = os.environ.get("LOCAL_MODEL_NAME")
 
-    if not os.environ.get("EMBEDDINGS_MODEL_NAME") == None:
+    if not os.environ.get("EMBEDDINGS_MODEL_NAME") is None:
         env_variables['embeddings_model_name'] = os.environ.get("EMBEDDINGS_MODEL_NAME")
 
-    if not os.environ.get("GOOGLE_LLM_API_TIMEOUT") == None:
+    if not os.environ.get("GOOGLE_LLM_API_TIMEOUT") is None:
         env_variables['google_llm_api_timeout'] = int(os.environ.get("GOOGLE_LLM_API_TIMEOUT"))
 
-    if not os.environ.get("SD_URL") == None:
+    if not os.environ.get("SD_URL") is None:
         env_variables['sd_url'] = os.environ.get("SD_URL")
 
-    if not os.environ.get("SD_STEPS") == None:
+    if not os.environ.get("SD_STEPS") is None:
         env_variables['sd_steps'] = int(os.environ.get("SD_STEPS"))
 
     return env_variables
-

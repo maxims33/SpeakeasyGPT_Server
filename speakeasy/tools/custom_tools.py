@@ -17,7 +17,7 @@ class CustomBaseTool(Tool): #pylint: disable=too-few-public-methods
     vector_db : VectorStore = None
 
     def __init__(self, fact, name, description, #pylint: disable=too-many-arguments
-            vdb = None, return_direct = False): 
+            vdb = None, return_direct = False):
         super().__init__(
                 return_direct = return_direct,
                 name = name,
@@ -86,7 +86,7 @@ class CustomMathTool(CustomBaseTool): #pylint: disable=too-few-public-methods
         """Use the tool asynchronously."""
         raise NotImplementedError("does not support async")
 
-class CustomInstructLLMTool(CustomBaseTool):
+class CustomInstructLLMTool(CustomBaseTool):#pylint: disable=too-few-public-methods
     """
     Class representing a tool used for generating content - Simply queries the LLM
     """
