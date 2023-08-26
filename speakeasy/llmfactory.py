@@ -7,24 +7,33 @@ Module for various types of LLM Factory
 #TODO Add Factory for Using LLama specific classes when dealing with Llama, GPT4All models
 #TODO How to get load_in_8bit=True working in windows? Can it only work with quantized models?
 """
-import torch
 from typing import List, Optional
 from enum import Enum
+import torch
+from bardapi import Bard
 from langchain import HuggingFaceHub
 from langchain.llms.base import LLM
 from langchain.llms import OpenAI, HuggingFacePipeline, VertexAI
-from langchain.chat_models import ChatOpenAI, ChatVertexAI
-from langchain.embeddings import HuggingFaceEmbeddings, VertexAIEmbeddings, HuggingFaceInstructEmbeddings
+#from langchain.chat_models import ChatVertexAI
+from langchain.embeddings import (
+    HuggingFaceEmbeddings,
+#    HuggingFaceInstructEmbeddings,
+    VertexAIEmbeddings
+)
 from langchain.embeddings.openai import OpenAIEmbeddings
-from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForCausalLM
-from bardapi import Bard
+#from langchain.schema import AIMessage, HumanMessage, SystemMessage
+from transformers import (
+    pipeline,
+    AutoTokenizer,
+#    AutoModelForCausalLM
+    AutoModelForSeq2SeqLM
+)
 #from langchain.prompts.chat import (
 #    ChatPromptTemplate,
 #    SystemMessagePromptTemplate,
 #    AIMessagePromptTemplate,
 #    HumanMessagePromptTemplate
 #)
-from langchain.schema import AIMessage, HumanMessage, SystemMessage
 
 class LLMType(Enum):
     """ Setup the LLM Types """
@@ -67,16 +76,17 @@ class LLMFactory():
     max_length = 512
     max_k = 1
 
-    def __init__(self, model_name = "", temperature = 0, max_length = 512, max_k = 1, env_config = {}):
+    def __init__(self, model_name = "", temperature = 0, max_length = 512, max_k = 1, env_config = None):
         self.env_config = env_config
         self.model_name = model_name
         self.temperature = temperature
         self.max_length = max_length
         self.max_k = max_k
+        self.llm = None
         self.construct_llm()
 
     def __repr__(self):
-        return '<LLMFactory(model_name={self.model_name})>'.format(self=self)
+        return f"<LLMFactory(model_name={self.model_name})>"
 
     def construct_llm(self):
         """Construct the LLM component for the given model"""
@@ -89,7 +99,7 @@ class LLMFactory():
     def code_support(self) -> bool:
         """ Added to attempt add support for Bardapi Experimental Features """
         return False
-    
+ 
 class LLMAndEmbeddingsFactory(LLMFactory):
     """ Abstract factory for LLM components and embeddings """
     def __init__(self,
@@ -99,15 +109,21 @@ class LLMAndEmbeddingsFactory(LLMFactory):
             max_k = LLMFactory.max_k,
             embedding_model_name = 'intfloat/e5-large-v2',
             embedding_device_id = 'cuda',
-            env_config = {}
+            env_config = None
         ):
         super().__init__(model_name, temperature, max_length, max_k, env_config = env_config)
         self.embedding_model_name = embedding_model_name
         self.embedding_device_id = embedding_device_id
+        self.embeddings = None
         self.construct_embeddings()
 
     def __repr__(self):
-        return '<LLMFAndEmbeddingFactory(model_name={self.model_name}, embedding_model_name={self.embedding_model_name})>'.format(self=self)
+        return  f"<LLMFAndEmbeddingFactory(model_name={self.model_name}, "
+                f"embedding_model_name={self.embedding_model_name})>"
+
+    def construct_llm(self):
+        """ Construct the LLM """
+        raise NotImplementedError("Must be implemented in subclass")
 
     def construct_embeddings(self):
         """Construct the relevant Embeddings"""
@@ -116,13 +132,13 @@ class LLMAndEmbeddingsFactory(LLMFactory):
             model_kwargs={"device": self.embedding_device_id
         })
 
-# ------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------
 
 class OpenAIFactory(LLMAndEmbeddingsFactory):
     """ Factory for OpenAI LLM components """
     max_k = 4
 
-    def __init__(self, env_config = {}):
+    def __init__(self, env_config = None):
         super().__init__(max_k = OpenAIFactory.max_k, env_config = env_config)
 
     def __repr__(self):
@@ -141,7 +157,7 @@ class HuggingFaceFactory(LLMAndEmbeddingsFactory):
     temperature = 0.5
     model_name = "google/flan-t5-xxl"
 
-    def __init__(self, env_config = {}):
+    def __init__(self, env_config = None):
         super().__init__(
                 model_name = HuggingFaceFactory.model_name,
                 temperature = HuggingFaceFactory.temperature,
@@ -149,7 +165,8 @@ class HuggingFaceFactory(LLMAndEmbeddingsFactory):
             )
 
     def __repr__(self):
-        return '<HuggingFaceFactory(model_name={self.model_name}), embedding_model_name={self.embedding_model_name}>'.format(self=self)
+        return  f"<HuggingFaceFactory(model_name={self.model_name}), "
+                f"embedding_model_name={self.embedding_model_name}>"
 
     def construct_llm(self):
         """ LLM constructor method """
@@ -163,7 +180,7 @@ class LocalLLMFactory(LLMAndEmbeddingsFactory):
     """
     Factory for LLM components for running on local hardware
     """
-    def __init__(self, env_config = {},
+    def __init__(self, env_config = None,
             model_name = "google/flan-t5-large",
             device_id = "cpu",
             load_in_8bit = False
@@ -173,12 +190,13 @@ class LocalLLMFactory(LLMAndEmbeddingsFactory):
         super().__init__(env_config = env_config, model_name = model_name)
 
     def __repr__(self):
-        return '<LocalLLMFactory(model_name={self.model_name}, embedding_model_name={self.embedding_model_name})>'.format(self=self)
+        return  f"<LocalLLMFactory(model_name={self.model_name}, "
+                f"embedding_model_name={self.embedding_model_name})>"
 
     def construct_llm_from_id(self):
         """ LLM constructor method """
         # Handle device mapping
-        self.llm = HuggingFacePipeline.from_model_id(
+        self.llm = HuggingFacePipeline.from_model_id( #pylint: disable=attribute-defined-outside-init
                 model_id=self.model_name,
                 task="text2text-generation",
                 device=-1,
@@ -218,14 +236,14 @@ class LocalLLMFactory(LLMAndEmbeddingsFactory):
     #    self.embeddings = HuggingFaceInstructEmbeddings(
     #        model_name=self.embedding_model_name,
     #        model_kwargs={"device": self.embeddings_device_id}
-    #    ) 
+    #    )
 
 # Models: "text-bison@001" , "code-bison@001" , "chat-bison@001"
 class GoogleLLMFactory(LLMAndEmbeddingsFactory):
     """
     Factory for Google LLM components, I.e.: Vertex AI
     """
-    def __init__(self, env_config = {}, model_name = "code-bison@001", max_k = 4):
+    def __init__(self, env_config = None, model_name = "code-bison@001", max_k = 4):
         super().__init__(max_k = max_k, model_name = model_name, env_config = env_config)
 
     def __repr__(self):
@@ -252,12 +270,12 @@ class BardLLMFactory(LLMAndEmbeddingsFactory):
     Assumes API key is already set as environment variable, for example using os.environ['_BARD_API_KEY']="xxxxxxxx"
     Set environment variable BARD_EXPERIMENTAL to True for using Bardapi Experimental features (assumes using github branch of Bardapi)
     """
-    def __init__(self, env_config = {}, api_timeout = 30):
+    def __init__(self, env_config = None, api_timeout = 30):
         self.api_timeout = api_timeout
-        super(BardLLMFactory, self).__init__(env_config = env_config)
+        super().__init__(env_config = env_config)
 
     def __repr__(self):
-        return '<BardLLMFactory(model_name=Bard), embedding_model_name={self.embedding_model_name}>'.format(self=self)
+        return f"<BardLLMFactory(model_name=Bard), embedding_model_name={self.embedding_model_name}>"
 
     def construct_llm(self):
         """ LLM constructor method """
@@ -285,11 +303,11 @@ class BardLLMWrapper(LLM):
     response_element = 'content'
 
     def __init__(self, timeout = None):
-        super(BardLLMWrapper, self).__init__()
+        super().__init__()
         self.googlellm = Bard(timeout = timeout)
         self.code_runner = Bard(timeout = timeout, run_code=True)
 
-    def _call(
+    def _call( #pylint: disable=unused-argument
         self,
         prompt: str,
         stop: Optional[List[str]] = None,
@@ -300,11 +318,11 @@ class BardLLMWrapper(LLM):
         self.last_response_dict = response_dict
         full_resp =  response_dict[self.response_element]
         resp_frag = full_resp.replace('**', '') # Replace the chars Bard sometimes adds
-        if stop != None:
+        if stop is not None:
             if not isinstance(stop, List):
                 stop = stop()
-            for s in stop:
-                tmp = full_resp.split(s) # Hacked stop sequence handling
+            for stp in stop:
+                tmp = full_resp.split(stp) # Hacked stop sequence handling
                 if len(tmp) > 1:
                     resp_frag = tmp[0]
         #print(f"\nFull Response Dict::::::::::::::::::::::\n{response_dict}")
