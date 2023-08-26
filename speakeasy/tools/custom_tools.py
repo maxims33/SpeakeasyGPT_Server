@@ -40,8 +40,7 @@ class CustomBaseTool(Tool):
     # Subclasses to override to customise error handling
     def _handle_error(self, error : ToolException) -> str:
         print("TOOL ERROR ENCOUNTERED!")
-        return  ("The following errors occurred during tool execution:" + error.args[0] + 
-            "Please try another tool!")
+        return  "Errors during tool execution: " + error.args[0] + " Please try another tool!"
 
 
 # ------------------------------------------------------------------------
