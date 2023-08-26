@@ -1,0 +1,32 @@
+#Standard
+#instance_class: F4_1G
+#runtime: python310
+
+# Flex
+env: flex
+runtime: python
+threadsafe: yes
+runtime_config:
+  runtime_version: "3.10"
+  operating_system: "ubuntu22"
+
+manual_scaling:
+  instances: 1
+
+resources:
+  cpu: 1
+  memory_gb: 6
+  disk_size_gb: 30
+
+env_variables:
+  FLASK_APP: serve.py
+  ENABLE_DEBUG: False
+  OPENAI_API_KEY: 
+  HUGGINGFACEHUB_API_TOKEN: 
+  _BARD_API_KEY: 
+  GOOGLE_APPLICATION_CREDENTIALS: 
+  DOCS_PERSIST_DIRECTORY: db_docs/
+  IMAGES_PERSIST_DIRECTORY: db_images/
+
+entrypoint: flask run --host 0.0.0.0 --port $PORT
+
