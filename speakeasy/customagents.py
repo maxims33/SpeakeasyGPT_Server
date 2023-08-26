@@ -4,7 +4,7 @@ Module defining custom langchain agents
 #TODO Exploring adding memory backed by a Vectorstore. Explicit memory 'management'
 """
 
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, List, Tuple
 from langchain.agents import initialize_agent, AgentExecutor
 from langchain.schema import AgentAction, AgentFinish
 from langchain.agents.mrkl.base import ZeroShotAgent
@@ -52,25 +52,25 @@ class CustomBardAgent(CustomBaseAgent):
             for action, observation in intermediate_steps:
                 thoughts += action.log
                 thoughts += (
-                    f"\n{self.observation_prefix}{observation}\n{self.llm_prefix}" #pylint disable=no-member
+                    f"\n{self.observation_prefix}{observation}\n{self.llm_prefix}" #pylint: disable=no-member line-too-long
                 )
             # Adding to the previous steps, we now tell the LLM to make a final pred
             thoughts += (
                 "\n\nI now need to return ONLY a final answer based on the previous steps. "
-                "The answer MUST be prefixed with the following label 'Final Anwer: '. DO NOT OUTPUT ACTION TAG!"
+                "The answer MUST be prefixed with the following label 'Final Anwer: '."
+                "DO NOT OUTPUT ACTION TAG!"
             )
             new_inputs = {"agent_scratchpad": thoughts, "stop":None} #Setting stop to None
             full_inputs = {**kwargs, **new_inputs}
-            full_output = self.llm_chain.predict(**full_inputs) #pylint disable=no-member
+            full_output = self.llm_chain.predict(**full_inputs) #pylint: disable=no-member
             # We try to extract a final answer
-            parsed_output = self.output_parser.parse(full_output) #pylint disable=no-member
+            parsed_output = self.output_parser.parse(full_output) #pylint: disable=no-member
             if isinstance(parsed_output, AgentFinish):
                 # If we can extract, we send the correct stuff
                 return parsed_output
-            else:
-                # If we can extract, but the tool is not the final tool,
-                # we just return the full output
-                return AgentFinish({"output": full_output}, full_output)
+            # If we can extract, but the tool is not the final tool,
+            # we just return the full output
+            return AgentFinish({"output": full_output}, full_output)
         else:
             raise ValueError(
                 "early_stopping_method should be one of `force` or `generate`, "
@@ -156,17 +156,25 @@ def default_agent_executor(agent,
         handle_parsing_errors=agent.handle_agent_error
     )
 
-def init_agent(factory, doc_db, img_db, max_iterations=1, verbose=True, early_stopping_method='generate'):
+def init_agent(factory,
+        doc_db, img_db,
+        max_iterations=1,
+        verbose=True,
+        early_stopping_method='generate'
+    ):
     """ Initialize Agent - Without memory """
-#    prefix = """Answer the following questions or tasks as best you can. Ensure to choose one of the following tools as the 'Action':"""
-#    suffix = """You MUST to stick to the format provided above, but do not output the 'Final Answer:' until instructed. Begin!\n
+#    prefix = """Answer the following questions or tasks as best you can. 
+#Ensure to choose one of the following tools as the 'Action':"""
+#    suffix = """You MUST to stick to the format provided above, 
+#but do not output the 'Final Answer:' until instructed. Begin!\n
 #Question: {input}
 #{agent_scratchpad}"""
     tools = custom_tools(factory, doc_db, img_db)
     tool_names = [tool.name for tool in tools]
-    prompt = CustomSingleActionAgent.create_prompt(tools, input_variables=["input", "agent_scratchpad"]) #prefix=prefix, suffix=suffix,
-    llm_chain = LLMChain(llm=factory.llm, prompt=prompt)
-    agent = CustomSingleActionAgent(llm_chain=llm_chain, allowed_tools=tool_names, verbose=verbose)
+    prompt = CustomSingleActionAgent.create_prompt(tools, input_variables=["input", "agent_scratchpad"])
+    agent = CustomSingleActionAgent(llm_chain = LLMChain(llm=factory.llm, prompt=prompt),
+        allowed_tools=tool_names, verbose=verbose
+    )
     agent_executor = default_agent_executor(agent, tools,
             max_iterations=max_iterations,
             verbose=verbose,
@@ -174,9 +182,15 @@ def init_agent(factory, doc_db, img_db, max_iterations=1, verbose=True, early_st
         )
     return agent_executor
 
-def init_conversational_agent(factory, doc_db, img_db, max_iterations=1, verbose=True, early_stopping_method='generate'):
+def init_conversational_agent(factory,
+        doc_db,
+        img_db,
+        max_iterations=1,
+        verbose=True,
+        early_stopping_method='generate'
+    ):
     """ Initialize Conversational Agent - With memory """
-    prefix = """You are Assistant, a large language model. 
+    prefix = """You are Assistant, a large language model.
 Assistant is designed to be able to assist with a wide range of tasks, 
 from answering simple questions to providing in-depth explanations and discussions on a wide range of topics. 
 As a language model, Assistant is able to generate human-like text based on the input it receives, 
@@ -228,7 +242,6 @@ Thought: Do I need to use a tool? No
         format_instructions=instruction_format,
         input_variables=["chat_history", "input", "agent_scratchpad"]
     )
-    llm_chain = LLMChain(llm=factory.llm, prompt=prompt)
     agent = CustomConversationalAgent(llm_chain = LLMChain(llm=factory.llm, prompt=prompt),
         allowed_tools=tool_names,
         verbose=verbose
