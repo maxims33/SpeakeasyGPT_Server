@@ -125,7 +125,8 @@ class LLMAndEmbeddingsFactory(LLMFactory):
         self.construct_embeddings()
 
     def __repr__(self):
-        return f"<LLMFAndEmbeddingFactory(model_name={self.model_name}, embedding_model_name={self.embedding_model_name})>"
+        return f"""<LLMFAndEmbeddingFactory(model_name={self.model_name},
+ embedding_model_name={self.embedding_model_name})>"""
 
     def construct_llm(self):
         """ Construct the LLM """
@@ -171,7 +172,8 @@ class HuggingFaceFactory(LLMAndEmbeddingsFactory):
             )
 
     def __repr__(self):
-        return f"<HuggingFaceFactory(model_name={self.model_name}), embedding_model_name={self.embedding_model_name}>"
+        return f"""<HuggingFaceFactory(model_name={self.model_name}),
+ embedding_model_name={self.embedding_model_name}>"""
 
     def construct_llm(self):
         """ LLM constructor method """
@@ -195,7 +197,8 @@ class LocalLLMFactory(LLMAndEmbeddingsFactory):
         super().__init__(env_config = env_config, model_name = model_name)
 
     def __repr__(self):
-        return f"<LocalLLMFactory(model_name={self.model_name}, embedding_model_name={self.embedding_model_name})>"
+        return f"""<LocalLLMFactory(model_name={self.model_name},
+ embedding_model_name={self.embedding_model_name})>"""
 
     def construct_llm_from_id(self):
         """ LLM constructor method """
@@ -281,8 +284,8 @@ class BardLLMFactory(LLMAndEmbeddingsFactory):
         super().__init__(env_config = env_config)
 
     def __repr__(self):
-        return f"""<BardLLMFactory(model_name=Bard), 
-embedding_model_name={self.embedding_model_name}>"""
+        return f"""<BardLLMFactory(model_name=Bard),
+ embedding_model_name={self.embedding_model_name}>"""
 
     def construct_llm(self):
         """ LLM constructor method """
@@ -297,12 +300,14 @@ embedding_model_name={self.embedding_model_name}>"""
         return self.env_config['bard_experimental']
 
 
-# ----------------------- LLM Wrappers ----------------------------------------------------------
+# ----------------------- LLM Wrappers ------------------------------------------------
 
 class BardLLMWrapper(LLM):
     """
-    Simple wrapper which operates similar to langchain LLM, as Bard is Bardapi is not supported by langchain
-    Attempted add support for Bard API Experimental fetures such as: retrieveing images, links and code, as well as running code.
+    Simple wrapper which operates similar to langchain LLM,
+    as Bard is Bardapi is not supported by langchain
+    Attempted add support for Bard API Experimental fetures
+    such as: retrieveing images, links and code, as well as running code.
     """
     googlellm : Bard = None
     code_runner : Bard = None
