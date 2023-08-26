@@ -9,16 +9,15 @@ from langchain.chains.llm_math.prompt import PROMPT
 from langchain.vectorstores.base import VectorStore
 from speakeasy.llmfactory import LLMFactory
 
-
-class CustomBaseTool(Tool):
+class CustomBaseTool(Tool): #pylint: disable=too-few-public-methods
     """
     Base class for custom tools
     """
     factory : LLMFactory = None
     vector_db : VectorStore = None
 
-    def __init__(self, fact, name, description,
-            vdb = None, return_direct = False): #pylint: disable=too-many-arguments
+    def __init__(self, fact, name, description, #pylint: disable=too-many-arguments
+            vdb = None, return_direct = False): 
         super().__init__(
                 return_direct = return_direct,
                 name = name,
@@ -46,7 +45,7 @@ class CustomBaseTool(Tool):
 # ------------------------------------------------------------------------
 
 
-class RunCodeTool(CustomBaseTool):
+class RunCodeTool(CustomBaseTool): #pylint: disable=too-few-public-methods
     """
      Class representing tool for executing (python) code - Only supported with Bard Experimental
     """
@@ -59,12 +58,18 @@ class RunCodeTool(CustomBaseTool):
             )
 
     def _run(self, query: str) -> str:
-        if self.factory.code_support() == True:
+        if self.factory.code_support() is True:
             return self.factory.llm.run_code(query)['code']
         return "Tool not supported. Check Bard_Experimental setting."
 
-# Class representing tool for math operations using expression evaluation
-class CustomMathTool(CustomBaseTool):
+    async def _arun(self, query: str) -> str:
+        """Use the tool asynchronously."""
+        raise NotImplementedError("does not support async")
+
+class CustomMathTool(CustomBaseTool): #pylint: disable=too-few-public-methods
+    """
+    Class representing tool for math operations using expression evaluation
+    """
     def __init__(self, fact, return_direct = False):
         super().__init__(fact,
                 name="EvaluateExpression",
@@ -73,12 +78,18 @@ class CustomMathTool(CustomBaseTool):
             )
 
     def _run(self, query: str) -> str:
-        pp = PROMPT
-        math_chain = LLMMathChain.from_llm(self.factory.llm, verbose=True, prompt=pp)
-        return math_chain.run(query) 
+        p_t = PROMPT
+        math_chain = LLMMathChain.from_llm(self.factory.llm, verbose=True, prompt=p_t)
+        return math_chain.run(query)
 
-# Class representing a tool used for generating content - Simply queries the LLM
+    async def _arun(self, query: str) -> str:
+        """Use the tool asynchronously."""
+        raise NotImplementedError("does not support async")
+
 class CustomInstructLLMTool(CustomBaseTool):
+    """
+    Class representing a tool used for generating content - Simply queries the LLM
+    """
     def __init__(self, fact, return_direct = False):
         super().__init__(fact,
                 name="Instruct_LLM",
@@ -89,3 +100,7 @@ class CustomInstructLLMTool(CustomBaseTool):
 
     def _run(self, query: str) -> str:
         return self.factory.llm(query)
+
+    async def _arun(self, query: str) -> str:
+        """Use the tool asynchronously."""
+        raise NotImplementedError("does not support async")
