@@ -1,0 +1,50 @@
+[tool.poetry]
+name = "Speakeasy-template"
+version = "0.1.0"
+description = "SpeakeasyGPT Server"
+authors = ["Max Svarts <maxims33@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.10.0,<3.11"
+bardapi="^0.1.38"
+bitsandbytes="^0.35.4"
+clickhouse-connect="^0.5.22"
+cython="^0.29.34"
+flask="^2.3.2"
+flask-cors="^4.0.0"
+google-cloud-aiplatform="^1.28.1"
+huggingface-hub="^0.16.4"
+langchain="^0.0.247"
+marshmallow="^3.20.1"
+marshmallow-enum="^1.5.1"
+openai="^0.27.8"
+"pdfminer.six"="20221105"
+pillow="^10.0.0"
+torch="^2.1.0 "
+torchvision="^0.16.0"
+pytorch-lightning="^2.0.1"
+transformers="^4.26.1"
+unstructured="^0.6.2"
+clip-interrogator="^0.5.4"
+accelerate="^0.18.0"
+sentence-transformers="^2.2.2"
+chromadb="^0.4.6"
+#replit-ai="^0.0.11"
+pydantic="^1.10.12"
+langdetect="^1.0.9"
+sqlalchemy="^2.0.21"
+
+
+[tool.pyright]
+# https://github.com/microsoft/pyright/blob/main/docs/configuration.md
+useLibraryCodeForTypes = true
+exclude = [".cache"]
+
+[tool.ruff]
+# https://beta.ruff.rs/docs/configuration/
+select = ['E', 'W', 'F', 'I', 'B', 'C4', 'ARG', 'SIM']
+ignore = ['W291', 'W292', 'W293']
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

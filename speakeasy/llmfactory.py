@@ -134,10 +134,10 @@ class LLMAndEmbeddingsFactory(LLMFactory):
 
     def construct_embeddings(self):
         """Construct the relevant Embeddings"""
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name=self.embedding_model_name,
-            model_kwargs={"device": self.embedding_device_id
-        })
+        self.embeddings = None #HuggingFaceEmbeddings(
+#            model_name=self.embedding_model_name,
+#            model_kwargs={"device": self.embedding_device_id
+#        })
 
 # -----------------------------------------------------------------------------------
 
@@ -302,6 +302,8 @@ class BardLLMFactory(LLMAndEmbeddingsFactory):
 
 # ----------------------- LLM Wrappers ------------------------------------------------
 
+from bardapi import BardCookies
+
 class BardLLMWrapper(LLM):
     """
     Simple wrapper which operates similar to langchain LLM,
@@ -316,8 +318,12 @@ class BardLLMWrapper(LLM):
 
     def __init__(self, timeout = None):
         super().__init__()
-        self.googlellm = Bard(timeout = timeout)
-        self.code_runner = Bard(timeout = timeout, run_code=True)
+        cookie_dict = {
+
+            # Any cookie values you want to pass session object.
+        }
+        self.googlellm = BardCookies(cookie_dict = cookie_dict, timeout = timeout) # Bard()
+        self.code_runner = BardCookies(cookie_dict = cookie_dict, timeout = timeout, run_code=True)
 
     def _call( #pylint: disable=unused-argument
         self,
@@ -325,8 +331,9 @@ class BardLLMWrapper(LLM):
         stop: Optional[List[str]] = None,
         run_manager = None,
     ) -> str:
-        #print(f"\nInput Prompt::::::::::::::::::::::::\n{prompt}") # For debugging
+        print(f"\nInput Prompt::::::::::::::::::::::::\n{prompt}") # For debugging
         response_dict = self.googlellm.get_answer(prompt)
+        print(f"\nresponse_dict::::::::::::::::::::::::\n{response_dict}") # For debugging
         self.last_response_dict = response_dict
         full_resp =  response_dict[self.response_element]
         resp_frag = full_resp.replace('**', '') # Replace the chars Bard sometimes adds
@@ -337,7 +344,7 @@ class BardLLMWrapper(LLM):
                 tmp = full_resp.split(stp) # Hacked stop sequence handling
                 if len(tmp) > 1:
                     resp_frag = tmp[0]
-        #print(f"\nFull Response Dict::::::::::::::::::::::\n{response_dict}")
+        print(f"\nFull Response Dict::::::::::::::::::::::\n{response_dict}")
         #print(f"\nFull Response until stop sequence:::::::::\n{resp_frag}") # For debugging
         self.response_element = 'content' # Set the next response back to content
         return resp_frag
