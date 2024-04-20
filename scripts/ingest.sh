@@ -8,7 +8,7 @@ export ENABLE_DEBUG=True
 ingest_path="./filebox/";
 do_clean=false;
 
-echo "Usage: scripts/ingest.sh -c TRUE_IF_DO_CLEAN_FIRST -f FILEPATH_TO_INGEST_FILES_FROM"
+echo "Usage: scripts/ingest.sh -c TRUE_IF_DO_CLEAN_FIRST -p FILEPATH_TO_INGEST_FILES_FROM"
 
 while getopts c:p: flag
 do

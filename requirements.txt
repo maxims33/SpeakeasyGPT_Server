@@ -29,3 +29,4 @@ chromadb==0.4.6
 pydantic==1.10.12
 langdetect==1.0.9
 sqlalchemy==2.0.21
+langchain-google-genai=="1.0.1

@@ -116,6 +116,7 @@ def format_response(respstr):
 # Retrieve from a dict if already instansitated
 factory_dict = {
     'LLMType.GOOGLE': None,
+    'LLMType.GOOGLEAISTUDIO': None,
     'LLMType.BARD': None,
     'LLMType.HUGGINGFACE': None,
     'LLMType.LOCAL': None,
@@ -221,7 +222,8 @@ def query_llm():
     req = deserialize_request(request)
     fact = choose_factory(req)
     print(f"Factory: {fact}")
-    return format_response(fact.llm(req.prompt))
+    return format_response(fact.llm.invoke(req.prompt))
+    #return format_response(fact.llm.invoke(req.prompt).content) # ChatGoogleGenerativeAI
   except Exception as exc:
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')

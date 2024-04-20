@@ -32,6 +32,7 @@ clickhouse-connect = "==0.5.22"
 #bardapi = {git = "https://github.com/dsdanielpark/Bard-API.git"}
 bardapi = "*"
 google-cloud-aiplatform = "*"
+langchain-google-genai = "*"
 
 [dev-packages]
 

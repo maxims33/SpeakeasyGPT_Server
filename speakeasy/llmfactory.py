@@ -10,10 +10,12 @@ Module for various types of LLM Factory
 from typing import List, Optional
 from enum import Enum
 import torch
+import os
 from bardapi import Bard
 from langchain import HuggingFaceHub
 from langchain.llms.base import LLM
 from langchain.llms import OpenAI, HuggingFacePipeline, VertexAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 #from langchain.chat_models import ChatVertexAI
 from langchain.embeddings import (
     HuggingFaceEmbeddings,
@@ -41,6 +43,7 @@ class LLMType(Enum):
     HUGGINGFACE = "HUGGINGFACE"
     OPENAI = "OPENAI"
     GOOGLE = "GOOGLE"
+    GOOGLEAISTUDIO = "GOOGLEAISTUDIO"
     BARD = "BARD"
 
 def init_factory_from_type(llm_type, env_config):
@@ -54,6 +57,8 @@ def init_factory_from_type(llm_type, env_config):
             fact = OpenAIFactory(env_config = env_config)
         case LLMType.GOOGLE:
             fact = GoogleLLMFactory(env_config = env_config)
+        case LLMType.GOOGLEAISTUDIO:
+            fact = GoogleAIstudioFactory(env_config = env_config)
         case LLMType.BARD:
             fact = BardLLMFactory(env_config = env_config,
                 api_timeout = env_config['google_llm_api_timeout'])
@@ -270,6 +275,24 @@ class GoogleLLMFactory(LLMAndEmbeddingsFactory):
     def construct_embeddings(self):
         """ Embdings constructor method """
         self.embeddings = VertexAIEmbeddings()
+
+class GoogleAIstudioFactory(LLMAndEmbeddingsFactory):
+  """
+  Factory for Google AI Studio LLM components.
+  """
+  def __init__(self, env_config=None, model_name="gemini-pro", max_k=4):
+      super().__init__(max_k=max_k, model_name=model_name, env_config=env_config)
+
+  def __repr__(self):
+      return f"<GoogleAIstudioFactory(model_name={self.model_name})>"
+
+  def construct_llm(self):
+      """LLM constructor method."""
+      #TODO: AI studio - Add embeddings
+      #TODO: AI studio - Check if need the key handling here 
+      #TOOD: AI studio - Agents not able to be instansiated - May need wrapper?
+      self.llm  = ChatGoogleGenerativeAI(model=self.model_name, google_api_key=os.environ["GOOGLE_API_KEY"])
+
 
 class BardLLMFactory(LLMAndEmbeddingsFactory):
     """
