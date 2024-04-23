@@ -163,15 +163,17 @@ def init_agent(factory,
         early_stopping_method='generate'
     ):
     """ Initialize Agent - Without memory """
-#    prefix = """Answer the following questions or tasks as best you can.
-#Ensure to choose one of the following tools as the 'Action':"""
-#    suffix = """You MUST to stick to the format provided above,
-#but do not output the 'Final Answer:' until instructed. Begin!\n
-#Question: {input}
-#{agent_scratchpad}"""
+    prefix = """Answer the following questions or tasks as best you can.
+Ensure to choose one of the following tools as the 'Action':"""
+    suffix = """You MUST to stick to the format provided above,
+but do not output the 'Final Answer:' until instructed. Begin!\n
+Question: {input}
+{agent_scratchpad}"""
     tools = custom_tools(factory, doc_db, img_db)
     tool_names = [tool.name for tool in tools]
     prompt = CustomSingleActionAgent.create_prompt(tools,
+        prefix=prefix,
+        suffix=suffix,
         input_variables=["input", "agent_scratchpad"]
     )
     agent = CustomSingleActionAgent(llm_chain = LLMChain(llm=factory.llm, prompt=prompt),

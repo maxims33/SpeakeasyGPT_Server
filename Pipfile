@@ -10,12 +10,13 @@ verify_ssl = false
 
 [packages]
 flask = "*"
-langchain = "*"
+langchain = "==0.1.16"
 marshmallow = "*"
 marshmallow-enum = "*"
+pillow = "==10.3.0"
 openai = "*"
 huggingface-hub = "*"
-transformers = "==4.26.1"
+transformers = "==4.38.0"
 sentence-transformers = "*"
 torch = {index = "pytorch", version = "==1.13.1+cu117"}
 torchvision = {index = "pytorch", version = "==0.14.1+cu117"}
@@ -31,8 +32,9 @@ chromadb = "*"
 clickhouse-connect = "==0.5.22"
 #bardapi = {git = "https://github.com/dsdanielpark/Bard-API.git"}
 bardapi = "*"
-google-cloud-aiplatform = "*"
-langchain-google-genai = "*"
+google-cloud-aiplatform = "==1.28.1"
+langchain-google-genai = "==1.0.1"
+langchain-google-vertexai = "==1.0.1"
 
 [dev-packages]
 

@@ -5,7 +5,7 @@ Module for custom handling of loading files
 from typing import List, Union
 from PIL import Image
 from langchain.docstore.document import Document
-from langchain.document_loaders import DirectoryLoader
+from langchain_community.document_loaders import DirectoryLoader
 from langchain.document_loaders.base import BaseLoader
 
 class CustomCaptionLoader(BaseLoader):

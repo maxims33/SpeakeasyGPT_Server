@@ -37,16 +37,7 @@ class Address(Base):
   def __repr__(self) -> str:
     return f"Address(id={self.id!r}, email_address={self.email_address!r})"
 
-
-engine = create_engine("sqlite:///sql.db", echo=True)
-
-#Base.metadata.create_all(engine)
-with Session(engine) as session:
-  stmt = select(User)
-
-  for user in session.scalars(stmt):
-    print(user)
-
+#----------------------------------------
 
 def insert(obj, session):
   session.add_all([obj])
@@ -74,3 +65,17 @@ def find_user_with_password(username, password, session):
 
 def update(obj, session):
   session.commit()
+
+#----------------------------------------
+
+engine = create_engine("sqlite:///sql.db", echo=True)
+
+try:
+  #Base.metadata.create_all(engine)
+  with Session(engine) as session:
+    stmt = select(User)
+
+    for user in session.scalars(stmt):
+      print(user)
+except Exception as err:
+  print("Tables missing Try running 'python sql/init_sqllite.py'", err) 

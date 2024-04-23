@@ -3,8 +3,8 @@ Module for working with vectorstores
 """
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Chroma
-from langchain.document_loaders import (
+from langchain_community.vectorstores import Chroma
+from langchain_community.document_loaders import (
         DirectoryLoader,
         TextLoader,
         CSVLoader,
