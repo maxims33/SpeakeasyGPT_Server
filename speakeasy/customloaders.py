@@ -50,7 +50,7 @@ class CustomCaptionLoader(BaseLoader):
 class DirectoryCaptionLoader(DirectoryLoader):
     """ Load directoy of captions of images """
     def __init__(self, file_path, glob="./*"):
-        super().__init__(file_path, glob = glob, loader_cls = None)
+        super().__init__(file_path, glob = glob, loader_cls = None) #fixme
         self.image_paths = []
 
     def load_file(self, item, path, docs, pbar): #pylint: disable=unused-argument
@@ -61,5 +61,7 @@ class DirectoryCaptionLoader(DirectoryLoader):
     def load(self) -> List[Document]:
         """ override the load method """
         super().load()
-        captions = CustomCaptionLoader(self.image_paths).load()
+        captions = []
+        if len(self.image_paths) > 0:
+          captions = CustomCaptionLoader(self.image_paths).load()
         return captions

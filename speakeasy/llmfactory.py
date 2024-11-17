@@ -1,11 +1,11 @@
 """
 Module for various types of LLM Factory
-#TODO Exploring ChatBard and session/conversation management. Also ChatOpenAI
-#TODO Exploring the Callback functionality - E.g.: StdOut Callback Streaming
-#TODO Exploring the Async functionality
-#TODO Add Factory for using text-generation, AutoModelForCausalLM
-#TODO Add Factory for Using LLama specific classes when dealing with Llama, GPT4All models
-#TODO How to get load_in_8bit=True working in windows? Can it only work with quantized models?
+#TODO Exploring Chat Models and session/conversation management.
+#TODO Exploring the Callback functionality - E.g.: Logging LLM stats
+#TODO Exploring the Async functionality?
+#TODO HF Pipelines - Factory for using text-generation, AutoModelForCausalLM
+#TODO How to get load_in_8bit=True working in windows? quantized models only?
+#TODO Removing unused code and imports
 """
 from typing import List, Optional
 from enum import Enum
@@ -15,9 +15,8 @@ from bardapi import Bard
 from langchain_community.llms import HuggingFaceHub
 from langchain.llms.base import LLM
 from langchain_community.llms import OpenAI, HuggingFacePipeline
-from langchain_google_vertexai import VertexAI, VertexAIEmbeddings
+from langchain_google_vertexai import VertexAI, VertexAIEmbeddings, ChatVertexAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-#from langchain.chat_models import ChatVertexAI
 from langchain_community.embeddings import (
     HuggingFaceEmbeddings,
     #    HuggingFaceInstructEmbeddings,
@@ -270,7 +269,7 @@ class GoogleLLMFactory(LLMAndEmbeddingsFactory):
     Factory for Google LLM components, I.e.: Vertex AI
     """
 
-  def __init__(self, env_config=None, model_name="gemini-1.0-pro", embedding_model_name="textembedding-gecko", max_k=4):
+  def __init__(self, env_config=None, model_name="gemini-1.5-pro-preview-0409", embedding_model_name="textembedding-gecko", max_k=4):
     super().__init__(max_k=max_k, model_name=model_name, embedding_model_name=embedding_model_name, env_config=env_config)
 
   def __repr__(self):

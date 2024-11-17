@@ -1,7 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
 # Common exports across scripts
-source scripts/common_env.sh
+source ./scripts/common_env.sh
 
 export ENABLE_DEBUG=True
 

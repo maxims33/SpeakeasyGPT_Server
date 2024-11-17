@@ -1,5 +1,5 @@
 from typing import List, Optional
-from sqlalchemy import ForeignKey, String, create_engine, select
+from sqlalchemy import ForeignKey, String, Integer, JSON, create_engine, select, Column
 from sqlalchemy.engine.result import null_result
 from sqlalchemy.orm import (DeclarativeBase, Mapped, mapped_column,
                             relationship, Session)
@@ -37,6 +37,18 @@ class Address(Base):
   def __repr__(self) -> str:
     return f"Address(id={self.id!r}, email_address={self.email_address!r})"
 
+class Recipe(Base):
+  __tablename__ = 'recipes'
+  id = Column(Integer, primary_key=True)
+  name = Column(String(50), nullable=False)
+  category = Column(String(50), nullable=False)
+  ingredients = Column(JSON, nullable=False)
+  instructions = Column(JSON, nullable=False)
+  image_file = Column(String(255), nullable=True)
+
+  def __repr__(self):
+      return f"Recipe(name='{self.name}')"
+    
 #----------------------------------------
 
 def insert(obj, session):
@@ -66,6 +78,11 @@ def find_user_with_password(username, password, session):
 def update(obj, session):
   session.commit()
 
+def find_recipes(category: str = ""):
+  with Session(engine) as session:
+    stmt = select(Recipe).where(Recipe.category == category)
+    return session.scalars(stmt).all()
+    
 #----------------------------------------
 
 engine = create_engine("sqlite:///sql.db", echo=True)

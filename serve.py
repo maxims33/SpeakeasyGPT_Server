@@ -1,18 +1,19 @@
 """
 Flask rest service implementation
 """
-
-
 import langchain
-from flask import Flask, request
+from langchain_core.prompts import PromptTemplate
+import flask
+import json
+import base64
+from  google.cloud import speech, texttospeech
+from flask import Flask, jsonify, request, send_from_directory, stream_with_context
 from flask_cors import CORS, cross_origin
 from langchain.chains import RetrievalQA
-from marshmallow import Schema, fields, post_load
-from marshmallow_enum import EnumField
 from sqlalchemy.orm import Session
 
 from env_params import parse_environment_variables
-from orm.models import (
+from speakeasy.orm.models import (
   User,
   engine,
   find_user,
@@ -23,7 +24,14 @@ from orm.models import (
 from speakeasy.customagents import init_agent, init_conversational_agent
 from speakeasy.indexes import load_document_db, load_image_db
 from speakeasy.llmfactory import LLMType, init_factory, init_factory_from_type
-
+from speakeasy.quiz_content import generate_quiz_questions
+from speakeasy.nutrition_content import generate_menu, retrieve_menu
+from api.schemas import ( 
+  deserialize_request,
+  deserialize_AccountSettings,
+  format_AccountSettings,
+  format_response
+)
 #from replit.ai.modelfarm import CompletionModel
 
 # Flask app
@@ -51,67 +59,6 @@ img_db = load_image_db(factory,
 agent = init_agent(factory, doc_db, img_db, max_iterations=1)
 convo_agent = init_conversational_agent(factory, doc_db, img_db)
 
-# ------- Serializing / Deserializing ------------------
-
-
-class Request():
-  """ Request object and handlers """
-
-  def __init__(self, prompt, llm_type=None):
-    self.prompt = prompt
-    self.llm_type = llm_type  # if None should then use whichever factory instantiated at start
-
-
-class RequestSchema(Schema):
-  """ Request schema """
-  prompt = fields.Str(required=True)
-  llm_type = EnumField(LLMType,
-                       required=False,
-                       missing=None,
-                       by_value=True,
-                       allow_none=True)  # Not sure exactly which did the trick
-
-  @post_load()
-  def make_request(self, data, **kwargs):  #pylint: disable=unused-argument
-    """ Instantiate the Request object """
-    return Request(**data)
-
-
-def deserialize_request(req_json):
-  """ Deserielze the request json """
-  return RequestSchema(partial=True).load(req_json.get_json())
-
-
-# Response class and hanlders
-class Response():
-  """ Response object """
-
-  def __init__(self, resp, image=None):
-    self.response = resp
-    if image is not None:
-      self.image = image
-
-
-class ResponseSchema(Schema):
-  """ The response schema"""
-  response = fields.Str()
-  image = fields.Str()
-
-
-def format_response(respstr):
-  """ format the response json """
-  schema = ResponseSchema(many=False, partial=True)
-  respobj = Response(respstr)
-
-  # Basic image handling
-  image_tag = 'BASE64ENCODED:'
-  if respstr.startswith(image_tag):
-    respobj.response = 'Here is the image.'
-    respobj.image = respstr[len(image_tag):]  # Strip BASE64ENCODED:
-
-  return schema.dump(respobj)
-
-
 # Setup factory dict with defaults
 # Retrieve from a dict if already instansitated
 factory_dict = {
@@ -123,7 +70,6 @@ factory_dict = {
     'LLMType.OPENAI': None
 }
 factory_dict[str(LLMType(env_config['factory_type']))] = factory
-
 
 def choose_factory(req):
   """ Not applicable for agents since these were initialised at start up """
@@ -138,84 +84,19 @@ def choose_factory(req):
   return factory_dict[str(req.llm_type)]
 
 
-# AccountSettings
-
-
-class AccountSettings():
-  """ Request object and handlers """
-
-  def __init__(self,
-               id=None,
-               username=None,
-               password=None,
-               email=None,
-               fullname=None,
-               gender=None,
-               orientation=None,
-               dob=None):
-    self.id = id
-    self.username = username
-    self.password = password
-    self.email = email
-    self.fullname = fullname
-    self.gender = gender
-    self.orientation = orientation
-    self.dob = dob
-
-
-class AccountSettingsSchema(Schema):
-  """ Request schema """
-  #  id = fields.Int(required=False)
-  username = fields.Str(required=False)
-  password = fields.Str(required=False)
-  fullname = fields.Str(required=False)
-  gender = fields.Str(required=False, allow_none=True)
-  orientation = fields.Str(required=False, allow_none=True)
-  dob = fields.Str(required=False, allow_none=True)
-  email = fields.Str(required=False, allow_none=True)
-
-  @post_load()
-  def make_request(self, data, **kwargs):  #pylint: disable=unused-argument
-    """ Instantiate the Request object """
-    return AccountSettings(**data)
-
-
-def deserialize_AccountSettings(req_json):
-  """ Deserielze the request json """
-  return AccountSettingsSchema(partial=True).load(req_json.get_json())
-
-
-# Handle id
-# Handle password
-class AccountSettingsResponseSchema(Schema):
-  """ The response schema"""
-  #  id = fields.Int(required=False)
-  username = fields.Str(required=False)
-  password = fields.Str(required=False)  # To remove
-  fullname = fields.Str(required=False)
-  gender = fields.Str(required=False)
-  orientation = fields.Str(required=False)
-  dob = fields.Str(required=False)
-  email = fields.Str(required=False)
-
-
-def format_AccountSettings(respobj):
-  """ format the response json """
-  schema = AccountSettingsSchema(many=False, partial=True)
-  return schema.dump(respobj)
-
-
 # --------- Define Routes ------------------------------
-# Consider default exception / error handler
-
 
 @app.route("/")
 def ping():
   """ endpoint to verify services are alive """
   return format_response("Ping.")
 
-
-@app.route("/query", methods=['GET', 'POST'])
+# Filename to be validated
+@app.route('/images/<filename>')
+def server_image(filename):
+    return send_from_directory(env_config['image_directory'], filename)
+  
+@app.route("/query", methods=['POST'])
 def query_llm():
   """ endpoint for basic LLM prompt """
   try:
@@ -227,6 +108,28 @@ def query_llm():
   except Exception as exc:
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
+
+
+@app.route("/query_streaming", methods=['POST'])
+#@stream_with_context
+def query_streaming():
+  """ endpoint for basic LLM prompt """
+
+  #def stream_output(text):
+    #yield f"data: {text}".encode('utf-8') + b'\n\n'  # Encode as bytes
+
+  req = deserialize_request(request)
+  fact = choose_factory(req)
+  print(f"Factory: {fact}")
+
+  prompt = PromptTemplate(input_variables=["input"], template="{input}")
+  # Create a Streaming Chain
+  # Unclear yet how to do streaming without using expression language
+  chain = prompt | fact.llm 
+  
+  response = flask.Response(chain.stream({'input': req.prompt}))
+  response.content_type = "text/event-stream"
+  return response
 
 
 @app.route("/search_docs", methods=['POST'])
@@ -303,7 +206,7 @@ def authenticateUser():
     return format_response('Oops sorry an error occured.')
 
 
-@app.route("/accountSettings", methods=['GET'])
+@app.route("/accountSettings", methods=['GET']) # Fix security
 @cross_origin()
 def getAccountSettings():
   """ endpoint for getting account settings """
@@ -319,8 +222,6 @@ def getAccountSettings():
     return format_response('Oops sorry an error occured.')
 
 
-# Fix inserting "None" instead of null
-# Need for finda suitable ORM package
 @app.route("/accountSettings", methods=['POST'])
 @cross_origin()
 def setAccountSettings():
@@ -350,6 +251,107 @@ def setAccountSettings():
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 
+@app.route("/nutrition_content", methods=['GET'])
+@cross_origin()
+def nutrition_content():
+  """ endpoint for retriving the nutrition content """
+  try:
+    category = request.args.get('category')
+    return jsonify(retrieve_menu(
+      category=category,       
+      image_folder=env_config['image_directory']))
+  except Exception as exc:
+    print(f"Caught exception: {exc}")
+    return format_response('Oops sorry an error occured.')
+
+@app.route("/generate_quiz_content", methods=['GET']) # Could just be a GET
+@cross_origin()
+def generate_quiz_content():
+  """ endpoint for retriving the quiz questions """
+  try:
+    category = request.args.get('category')
+    return generate_quiz_questions(factory.llm, category).json()
+  except Exception as exc:
+    print(f"Caught exception: {exc}")
+    return format_response('Oops sorry an error occured.')
+
+@app.route("/generate_nutrition_content", methods=['POST']) 
+@cross_origin()
+def generate_nutrition_content():
+  """ endpoint for retriving the quiz questions """
+  try:
+    req = deserialize_request(request)
+    fact = choose_factory(req)
+    print(f"Factory: {fact}")
+    return generate_menu(fact.llm, req.prompt).json()
+  except Exception as exc:
+    print(f"Caught exception: {exc}")
+    return format_response('Oops sorry an error occured.')
+
+@app.route("/speech_to_text", methods=['POST']) 
+@cross_origin()
+def speech_to_text():
+  """ endpoint for converting speech to text """
+  try:
+    #req = json.loads(request.data)
+    #print(f"Speech to Text request data: {request.get_json()}")
+
+    audio = speech.RecognitionAudio(content=base64.b64decode(request.get_json()['audioData']))
+
+    config = speech.RecognitionConfig(
+       encoding=speech.RecognitionConfig.AudioEncoding.AMR, # encoding for video/3gpp
+       sample_rate_hertz=8000,
+       language_code='en-US'  # Replace with your desired language code
+    )
+
+    # Detects speech in the audio file
+    client = speech.SpeechClient()
+    response = client.recognize(config=config, audio=audio)
+
+    first_alternative = ""
+    for result in response.results:
+       # First alternative is the most probable result
+       first_alternative = first_alternative + result.alternatives[0].transcript
+    print(u'Transcript: {}'.format(first_alternative))
+    return json.dumps({ 'text': first_alternative })
+  except Exception as exc:
+    print(f"Caught exception: {exc}")
+    return format_response('Oops sorry an error occured.')
+
+@app.route("/text_to_speech", methods=['POST']) 
+@cross_origin()
+def text_to_speech():
+  """ endpoint for converting speech to text """
+  try:
+    llm_response = factory.llm.invoke(request.get_json()['text'])
+    
+    client = texttospeech.TextToSpeechClient()
+
+    # Set the voice configuration
+    voice = texttospeech.VoiceSelectionParams(
+       language_code="en-US",
+       name="en-US-Wavenet-C"
+    )
+
+    # Set the audio configuration
+    audio_config = texttospeech.AudioConfig(
+       audio_encoding=texttospeech.AudioEncoding.MP3  # You can choose MP3 or LINEAR16
+    )
+
+    #Perform the text-to-speech synthesis
+    response = client.synthesize_speech(
+       request={"input": texttospeech.SynthesisInput(text=llm_response), "voice": voice, "audio_config": audio_config}
+    )
+
+    print("Sending response")
+    return json.dumps({
+      'audio': base64.b64encode(response.audio_content).decode('utf-8')
+    })
+  except Exception as exc:
+    print(f"Caught exception: {exc}")
+    return format_response('Oops sorry an error occured.')
+
+#------------- Experimental -----------------------------
 
 @app.route("/ai", methods=['POST'])
 @cross_origin()
@@ -366,6 +368,8 @@ def replitAIQuery():
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 
+
+#------------- For debugging  -----------------------------
 
 if __name__ == "__main__":
   app.run(host="0.0.0.0", port=5000, debug=True)

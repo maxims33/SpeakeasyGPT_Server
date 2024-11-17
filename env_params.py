@@ -15,6 +15,7 @@ def default_variables():
         'sd_url': None,
         'sd_steps': 10,
         'image_output_filename':'./generated_images/output.png',
+        'image_directory':'./generated_images/',
         'google_llm_api_timeout': 30,
         'bard_experimental': False,
 
@@ -42,6 +43,9 @@ def parse_environment_variables():
     if not os.environ.get("IMAGES_PERSIST_DIRECTORY") is None:
         env_variables['images_persist_directory'] = os.environ.get("IMAGES_PERSIST_DIRECTORY")
 
+    if not os.environ.get("IMAGE_DIRECTORY") is None:
+      env_variables['image_directory'] = os.environ.get("IMAGE_DIRECTORY")
+    
     if not os.environ.get("FACTORY_TYPE") is None:
         env_variables['factory_type'] = os.environ.get("FACTORY_TYPE")
 

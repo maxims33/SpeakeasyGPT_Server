@@ -381,7 +381,7 @@ SD_URL=URL of the Stable Diffusion API endpoint for image generation (e.g., http
 
 SD_STEPS=Number of steps for Stable Diffusion image generation.
 
-IMAGE_OUTPUT_FILENAME=Path to the output file for generated images.
+IMAGE_DIRECTORY=Folder where images are stored.
 
 GOOGLE_LLM_API_TIMEOUT=Timeout in seconds for Google LLM API requests.
 
