@@ -9,15 +9,16 @@ url = "https://download.pytorch.org/whl/cu117"
 verify_ssl = false
 
 [packages]
-flask = "*"
+flask = "==2.3.2"
+flask-cors = "==4.0.2"
 langchain = "==0.1.16"
-marshmallow = "*"
-marshmallow-enum = "*"
+marshmallow = "==3.20.1"
+marshmallow-enum = "=1.5.1"
 pillow = "==10.3.0"
 openai = "*"
-huggingface-hub = "*"
+huggingface-hub = "==0.19.3"
 transformers = "==4.38.0"
-sentence-transformers = "*"
+sentence-transformers = ">=2.2.2"
 torch = {index = "pytorch", version = "==1.13.1+cu117"}
 torchvision = {index = "pytorch", version = "==0.14.1+cu117"}
 pytorch-lightning = "==2.0.1"
@@ -32,10 +33,19 @@ chromadb = "*"
 clickhouse-connect = "==0.5.22"
 #bardapi = {git = "https://github.com/dsdanielpark/Bard-API.git"}
 bardapi = "*"
-google-cloud-aiplatform = "==1.28.1"
+google-cloud-aiplatform = ">=1.58.0"
 langchain-google-genai = "==1.0.1"
 langchain-google-vertexai = "==1.0.1"
 pdf2image = "==1.17.0"
+requests = ">=2.32.0"
+pydantic = "==2.7.1"
+
+# Security patching
+starlette = ">=0.40.0"
+nltk = ">=3.9"
+aiohttp = ">=3.10.11"
+setuptools = ">=70.0.0"
+werkzeug = ">=3.0.3"
 
 [dev-packages]
 
