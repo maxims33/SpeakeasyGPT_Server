@@ -17,7 +17,7 @@ from .tools.vectorstore_tools import CustomDocumentQueryTool, CustomImageQueryTo
 from .tools.image_tools import CustomGenerateImageTool, SearchImageTool
 
 class CustomBaseAgent():
-    """ Base class for customer agents """
+    """ Base class for custom agents """
     def handle_agent_error(self, error) -> str:
         """ Error handler method """
         print("THE OUTPUT FORMAT IS INCORRECT!")

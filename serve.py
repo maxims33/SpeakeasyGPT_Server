@@ -278,7 +278,7 @@ def generate_quiz_content():
 @app.route("/generate_nutrition_content", methods=['POST']) 
 @cross_origin()
 def generate_nutrition_content():
-  """ endpoint for retriving the quiz questions """
+  """ endpoint for retriving the nutrition questions """
   try:
     req = deserialize_request(request)
     fact = choose_factory(req)
