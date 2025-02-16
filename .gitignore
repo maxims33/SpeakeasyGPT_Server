@@ -163,3 +163,4 @@ filebox/
 db_images/
 db_docs/
 keys/
+token_log.txt

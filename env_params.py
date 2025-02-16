@@ -18,6 +18,7 @@ def default_variables():
         'image_directory':'./generated_images/',
         'google_llm_api_timeout': 30,
         'bard_experimental': False,
+        'auth': 'firebase', # dummy / firebase
 
         #'local_model_name': 'google/flan-t5-large',
         #'device_id': 'cpu',
@@ -32,6 +33,7 @@ def default_variables():
 
 def parse_environment_variables():
     """ Setting the configured values, if defined """
+    print("Loading environment variables")
     env_variables = default_variables()
 
     if os.environ.get("ENABLE_DEBUG") == 'True' or os.environ.get("ENABLE_DEBUG") == 'true':
@@ -65,3 +67,6 @@ def parse_environment_variables():
         env_variables['sd_steps'] = int(os.environ.get("SD_STEPS"))
 
     return env_variables
+
+# Collect environment variables or defaults
+env_config = parse_environment_variables()

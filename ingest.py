@@ -6,7 +6,7 @@ import argparse
 import langchain
 from speakeasy.llmfactory import init_factory
 from speakeasy.indexes import init_document_db, init_image_db
-from env_params import parse_environment_variables
+from env_params import env_config
 
 
 def parse_arguments():
@@ -26,7 +26,6 @@ def params_from_path():
 def main():
     """ Run from command line """
     params = params_from_path()
-    env_config = parse_environment_variables()
     langchain.debug = env_config['debug']
 
     factory = init_factory(env_config)

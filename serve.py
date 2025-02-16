@@ -12,7 +12,7 @@ from flask_cors import CORS, cross_origin
 from langchain.chains import RetrievalQA
 from sqlalchemy.orm import Session
 
-from env_params import parse_environment_variables
+from env_params import env_config
 from speakeasy.orm.models import (
   User,
   engine,
@@ -32,16 +32,13 @@ from api.schemas import (
   format_AccountSettings,
   format_response
 )
-#from replit.ai.modelfarm import CompletionModel
+from auth.auth import auth_required
 
 # Flask app
 app = Flask(__name__)
 
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
-
-# Collect environment variables or defaults
-env_config = parse_environment_variables()
 
 # Set langchain's debug flag
 langchain.debug = env_config['debug']
@@ -86,6 +83,10 @@ def choose_factory(req):
 
 # --------- Define Routes ------------------------------
 
+# Import additional routes
+import routes.serve_includes
+import routes.serve_experimental
+
 @app.route("/")
 def ping():
   """ endpoint to verify services are alive """
@@ -97,6 +98,7 @@ def server_image(filename):
     return send_from_directory(env_config['image_directory'], filename)
   
 @app.route("/query", methods=['POST'])
+@auth_required
 def query_llm():
   """ endpoint for basic LLM prompt """
   try:
@@ -111,6 +113,7 @@ def query_llm():
 
 
 @app.route("/query_streaming", methods=['POST'])
+@auth_required
 #@stream_with_context
 def query_streaming():
   """ endpoint for basic LLM prompt """
@@ -133,6 +136,7 @@ def query_streaming():
 
 
 @app.route("/search_docs", methods=['POST'])
+@auth_required
 def search_docs():
   """ endpoint for querying the document vectorstore """
   try:
@@ -151,6 +155,7 @@ def search_docs():
 
 
 @app.route("/search_images", methods=['POST'])
+@auth_required
 def search_images():
   """ endpoint for querying the image vectorstore """
   try:
@@ -169,6 +174,7 @@ def search_images():
 
 
 @app.route("/run_agent", methods=['POST'])
+@auth_required
 def run_agent():
   """ endpoint for zero / few shot agent """
   try:
@@ -180,6 +186,7 @@ def run_agent():
 
 
 @app.route("/run_convo_agent", methods=['POST'])
+@auth_required
 def run_convo_agent():
   """ endpoint for conversational agent"""
   try:
@@ -206,7 +213,8 @@ def authenticateUser():
     return format_response('Oops sorry an error occured.')
 
 
-@app.route("/accountSettings", methods=['GET']) # Fix security
+@app.route("/accountSettings", methods=['GET'])
+@auth_required
 @cross_origin()
 def getAccountSettings():
   """ endpoint for getting account settings """
@@ -223,6 +231,7 @@ def getAccountSettings():
 
 
 @app.route("/accountSettings", methods=['POST'])
+@auth_required
 @cross_origin()
 def setAccountSettings():
   """ endpoint for setting the account settings """
@@ -251,20 +260,21 @@ def setAccountSettings():
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 
-@app.route("/nutrition_content", methods=['GET'])
-@cross_origin()
-def nutrition_content():
-  """ endpoint for retriving the nutrition content """
-  try:
-    category = request.args.get('category')
-    return jsonify(retrieve_menu(
-      category=category,       
-      image_folder=env_config['image_directory']))
-  except Exception as exc:
-    print(f"Caught exception: {exc}")
-    return format_response('Oops sorry an error occured.')
+#@app.route("/nutrition_content", methods=['GET'])
+#@cross_origin()
+#def nutrition_content():
+#  """ endpoint for retriving the nutrition content """
+#  try:
+#    category = request.args.get('category')
+#    return jsonify(retrieve_menu(
+#      category=category,       
+#      image_folder=env_config['image_directory']))
+#  except Exception as exc:
+#    print(f"Caught exception: {exc}")
+#    return format_response('Oops sorry an error occured.')
 
 @app.route("/generate_quiz_content", methods=['GET']) # Could just be a GET
+@auth_required
 @cross_origin()
 def generate_quiz_content():
   """ endpoint for retriving the quiz questions """
@@ -275,7 +285,8 @@ def generate_quiz_content():
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 
-@app.route("/generate_nutrition_content", methods=['POST']) 
+@app.route("/generate_nutrition_content", methods=['POST'])
+@auth_required
 @cross_origin()
 def generate_nutrition_content():
   """ endpoint for retriving the nutrition questions """
@@ -289,6 +300,7 @@ def generate_nutrition_content():
     return format_response('Oops sorry an error occured.')
 
 @app.route("/speech_to_text", methods=['POST']) 
+@auth_required
 @cross_origin()
 def speech_to_text():
   """ endpoint for converting speech to text """
@@ -319,6 +331,7 @@ def speech_to_text():
     return format_response('Oops sorry an error occured.')
 
 @app.route("/text_to_speech", methods=['POST']) 
+@auth_required
 @cross_origin()
 def text_to_speech():
   """ endpoint for converting speech to text """
@@ -347,23 +360,6 @@ def text_to_speech():
     return json.dumps({
       'audio': base64.b64encode(response.audio_content).decode('utf-8')
     })
-  except Exception as exc:
-    print(f"Caught exception: {exc}")
-    return format_response('Oops sorry an error occured.')
-
-#------------- Experimental -----------------------------
-
-@app.route("/ai", methods=['POST'])
-@cross_origin()
-def replitAIQuery():
-  """ endpoint for setting the replit AI """
-  try:
-    req = deserialize_request(request)
-    model = CompletionModel("text-bison")
-    response = model.complete([req.prompt], temperature=0.2)
-
-    print(response.responses[0].choices[0].content)
-    return format_response(response.responses[0].choices[0].content)
   except Exception as exc:
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
