@@ -48,6 +48,8 @@ nltk = "~=3.9"
 aiohttp = "~=3.10.11"
 setuptools = "~=70.0.0"
 werkzeug = ">=3.0.3"
+firebase-admin = ">=6.6.0"
+gunicorn = ">=23.0.0"
 
 [dev-packages]
 

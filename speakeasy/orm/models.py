@@ -93,6 +93,7 @@ try:
     stmt = select(User)
 
     for user in session.scalars(stmt):
-      print(user)
+      #print(user)
+      pass
 except Exception as err:
   print("Tables missing Try running 'python sql/init_sqllite.py'", err) 

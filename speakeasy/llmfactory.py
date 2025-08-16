@@ -269,7 +269,7 @@ class GoogleLLMFactory(LLMAndEmbeddingsFactory):
     Factory for Google LLM components, I.e.: Vertex AI
     """
 
-  def __init__(self, env_config=None, model_name="gemini-1.5-pro-preview-0409", embedding_model_name="textembedding-gecko", max_k=4):
+  def __init__(self, env_config=None, model_name="gemini-2.0-flash", embedding_model_name="textembedding-gecko", max_k=4):
     super().__init__(max_k=max_k, model_name=model_name, embedding_model_name=embedding_model_name, env_config=env_config)
 
   def __repr__(self):
@@ -295,7 +295,7 @@ class GoogleAIstudioFactory(LLMAndEmbeddingsFactory):
   Factory for Google AI Studio LLM components.
   """
 
-  def __init__(self, env_config=None, model_name="gemini-pro", max_k=4):
+  def __init__(self, env_config=None, model_name="gemini-2.0-flash", max_k=4):
     super().__init__(max_k=max_k, model_name=model_name, env_config=env_config)
 
   def __repr__(self):

@@ -16,7 +16,6 @@
     pkgs.libpng
     pkgs.libjpeg_turbo
     pkgs.unixtools.netstat
-  pkgs.vim
-
+    pkgs.vim
   ];
 }
