@@ -1,10 +1,9 @@
-run = ["./scripts/runserver.sh"]
-#entrypoint = "serve.py"
-modules = ["python-3.10:v18-20230807-322e88b"]
+run = "./scripts/runserver.sh"
+modules = ["python-3.10"]
 hidden = [".pythonlibs"]
 
 [nix]
-channel = "stable-23_05"
+channel = "stable-25_05"
 
 [deployment]
 run = ["sh", "-c", "./scripts/runserver.sh"]

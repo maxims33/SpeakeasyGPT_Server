@@ -1,66 +1,68 @@
-[tool.poetry]
-name = "SpeakeasyGPT Server"
-version = "0.1.0"
+
+[project]
+name = "speakeasygpt-server"
+version = "0.2.0"
 description = "SpeakeasyGPT Server"
-authors = ["Max Svarts <maxims33@gmail.com>"]
-
-[tool.poetry.dependencies]
-python = ">=3.10.0,<3.11"
-bardapi="^0.1.38"
-bitsandbytes="^0.35.4"
-clickhouse-connect="^0.5.22"
-cython="^0.29.34"
-flask="^2.3.2"
-flask-cors="^4.0.2"
-google-cloud-aiplatform="^1.58.0"
-huggingface-hub="~0.19.3"
-langchain="==0.2.*"
-marshmallow="^3.20.1"
-marshmallow-enum="^1.5.1"
-openai="*"
-"pdfminer.six"="20221105"
-pillow="^10.3.0"
-torch="^2.2.2 "
-torchvision="^0.17.0"
-pytorch-lightning="^2.0.1"
-transformers="~4.38.0"
-unstructured="^0.6.2"
-clip-interrogator="^0.5.4"
-accelerate="^0.18.0"
-sentence-transformers="^2.2.2"
-chromadb="^0.4.6"
-#replit-ai="^0.0.11"
-pydantic="^2.7.1"
-langdetect="^1.0.9"
-sqlalchemy="^2.0.21"
-langchain-community = "==0.2.*"
-langchain-google-genai = "==1.*"
-langchain-google-vertexai = "==1.*"
-pdf2image = "^1.17.0"
-requests = "^2.32.0"
-google-cloud-texttospeech = "^2.16.3"
-google-cloud-speech = "^2.26.0"
-# Security patching
-starlette = "^0.40.0"
-nltk = "^3.9"
-aiohttp = "^3.10.11"
-setuptools = "^70.0.0"
-werkzeug = "^3.0.3"
-firebase-admin = "^6.6.0"
-gunicorn = "^23.0.0"
-
-
+authors = [
+    {name = "Max Svarts", email = "maxims33@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    "bardapi>=0.1.38", # remove related code and dependency
+    "bitsandbytes>=0.35.4",
+    "clickhouse-connect>=0.5.22",
+    "cython>=0.29.34",
+    "flask>=2.3.2",
+    "flask-cors>=4.0.2",
+    "google-cloud-aiplatform>=1.58.0",
+    "google-cloud-texttospeech>=2.16.3",
+    "google-cloud-speech>=2.26.0",
+    "huggingface-hub>=0.19.3",
+    "langchain==0.2.*",
+    "langchain-community==0.2.*",
+    "langchain-google-genai==1.*",
+    "langchain-google-vertexai==1.*",
+    "marshmallow>=3.20.1",
+    "marshmallow-enum>=1.5.1",
+    "openai>=1.55.1",
+    "pdfminer.six==20221105",
+    "pillow>=10.3.0",
+    "torch>=2.2.2",
+    "torchvision>=0.17.0",
+    "pytorch-lightning>=2.0.1",
+    "transformers>=4.38.0",
+    "unstructured>=0.6.2",
+    "clip-interrogator>=0.5.4",
+    "accelerate>=0.18.0",
+    "sentence-transformers>=2.2.2",
+    "chromadb>=0.4.6",
+    "pydantic==2.*",
+    "langdetect>=1.0.9",
+    "sqlalchemy>=2.0.21",
+    "pdf2image>=1.17.0",
+    "requests>=2.32.0",
+    "firebase-admin>=6.6.0",
+    "gunicorn>=23.0.0",
+    # Security patching
+    "starlette>=0.40.0",
+    "nltk>=3.9",
+    "aiohttp>=3.10.11", 
+    "setuptools>=70.0.0",
+    "werkzeug>=3.0.3",
+]
 
 [tool.pyright]
-# https://github.com/microsoft/pyright/blob/main/docs/configuration.md
 useLibraryCodeForTypes = true
 exclude = [".cache"]
 
 [tool.ruff]
-# https://beta.ruff.rs/docs/configuration/
 select = ['E', 'W', 'F', 'I', 'B', 'C4', 'ARG', 'SIM']
 ignore = ['W291', 'W292', 'W293']
 
+[tool.hatch.build.targets.wheel]
+packages = ["speakeasy", "api", "auth", "routes", "sql", "tests"]
+
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

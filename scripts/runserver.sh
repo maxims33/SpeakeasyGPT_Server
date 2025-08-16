@@ -10,8 +10,8 @@ export FACTORY_TYPE=GOOGLE
 #export SD_STEPS=5
 #export IMAGE_OUTPUT_PATH=./generated_images/output.png
 
-#pipenv flask run --host 0.0.0.0 --port 5000
+#flask --host 0.0.0.0 --port 5000
 gunicorn --bind 0.0.0.0:5000 serve:app
 
 # Alternative run command using main() method
-#pipenv run python serve.py
+#python serve.py
