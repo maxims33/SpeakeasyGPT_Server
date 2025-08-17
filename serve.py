@@ -148,7 +148,7 @@ def search_docs():
         retriever=doc_db.as_retriever(search_kwargs={"k": factory.max_k}),
         input_key="question",
         return_source_documents=True)
-    return format_response(chain(req.prompt)['result'])
+    return format_response(chain.invoke(req.prompt)['result'])
   except Exception as exc:
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
@@ -167,7 +167,7 @@ def search_images():
         retriever=img_db.as_retriever(search_kwargs={"k": factory.max_k}),
         input_key="question",
         return_source_documents=True)
-    return format_response(chain(req.prompt)['result'])
+    return format_response(chain.invoke(req.prompt)['result'])
   except Exception as exc:
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
@@ -260,20 +260,7 @@ def setAccountSettings():
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 
-#@app.route("/nutrition_content", methods=['GET'])
-#@cross_origin()
-#def nutrition_content():
-#  """ endpoint for retriving the nutrition content """
-#  try:
-#    category = request.args.get('category')
-#    return jsonify(retrieve_menu(
-#      category=category,       
-#      image_folder=env_config['image_directory']))
-#  except Exception as exc:
-#    print(f"Caught exception: {exc}")
-#    return format_response('Oops sorry an error occured.')
-
-@app.route("/generate_quiz_content", methods=['GET']) # Could just be a GET
+@app.route("/generate_quiz_content", methods=['GET'])
 @auth_required
 @cross_origin()
 def generate_quiz_content():

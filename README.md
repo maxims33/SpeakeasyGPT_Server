@@ -23,49 +23,52 @@ Note that currently Voice Recognition and Text To Speah Capabilities are handled
 3. The LLM processes the prompt and generates a response.
 4. The response is returned to the user through the API.
 
-## Installing dependencies with Pipenv
+## Installing dependencies with uv
 
-The project includes a Pipfile for managing dependencies using the Pipenv tool. 
-Using Pipenv and the Pipfile helps manage dependencies effectively and ensures a consistent environment for running the SpeakeasyGPT project. Here's how to use it:
+The project includes a pyproject.toml for managing dependencies using the uv tool to help ensures a consistent environment for running the SpeakeasyGPT project. 
+Here's how to use it:
 
-### 1. Install Pipenv:
+### 1. Install uv:
 
-If you don't have Pipenv installed, you can install it using pip:
-
-```bash
-pip install pipenv
-```
-
-### 2. Install Dependencies:
-
-Run the following command to install the dependencies specified in the Pipfile:
+If you don't have uv installed, you can install it using pip:
 
 ```bash
-pipenv install
+pip install uv
 ```
 
-This will create a virtual environment and install all the required packages.
+### 2. (optional) Create a Virtual Environment:
 
-### 3. (optional) Activate the Virtual Environment:
-
-To activate the virtual environment, run:
+To create the virtual environment, run:
 
 ```bash
-pipenv shell
+uv venv [env name]
 ```
 
-This will activate the virtual environment, and you'll see the environment name in your terminal prompt.
-Note: This step is optional since the scripts prefix commands with `pipenv run` 
+Then to activate the virtual environment, run:
+
+```bash
+source ./[env name]/bin/activate
+```
+
+The environment name will then be shown in your terminal prompt.
+
+### 3. Install Dependencies:
+
+Run the following command to install the dependencies specified in the the dependencies defined in pyproject.toml:
+
+```bash
+uv sync
+```
 
 ### Additional Notes:
 
-**Pipfile.lock:** The Pipfile.lock file ensures that the exact versions of dependencies are installed, ensuring consistency across different environments.
+**uv.lock:** The uv.lock file ensures that the exact versions of dependencies are installed, ensuring consistency across different environments.
 
 **Updating Dependencies:** To update dependencies, you can use the following commands:
 
-* `pipenv update:` - Updates all dependencies to their latest versions according to the version constraints in the Pipfile.
-* `pipenv update [package_name]:` - Updates a specific package to its latest version.
-* `pipenv install [package_name]` - This will add the package to the Pipfile and install it in the virtual environment.
+* `uv lock --upgrade:` - Updates all dependencies to their latest versions according to the version constraints in the Pipfile.
+* `uv lock --upgrade-package [package_name]:` - Updates a specific package to its latest version.
+* `uv add [package_name]` - This will add the package to the Pipfile and install it in the virtual environment.
 
 
 ## Scripts Usage Guide
@@ -73,7 +76,7 @@ Note: This step is optional since the scripts prefix commands with `pipenv run`
 This guide provides instructions on how to use the shell scripts located in the scripts folder of the SpeakeasyGPT_Server project. These scripts automate common tasks such as running the server, ingesting data, and cleaning databases.
 
 ### Prerequisites:
-Ensure you have the required Python packages installed (refer to [Installing dependencies section](#installing-dependencies-with-pipenv)).
+Ensure you have the required Python packages installed (refer to [Installing dependencies section](#installing-dependencies-with-uv)).
 Set the necessary environment variables, including API keys and paths.
 Make sure you have the appropriate permissions to execute shell scripts.
 
