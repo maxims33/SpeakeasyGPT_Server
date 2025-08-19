@@ -1,6 +1,5 @@
 """
 Module defining custom langchain agents
-#TODO Exploring other agents and output parsers E.g.: Structured/Pydantic Chat? OpenAI functions?
 #TODO Exploring adding memory backed by a Vectorstore. Explicit memory 'management'
 """
 
@@ -12,9 +11,8 @@ from langchain.agents.conversational.base import ConversationalAgent
 from langchain.agents.agent_toolkits import VectorStoreToolkit, VectorStoreInfo
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
-from .tools.custom_tools import CustomInstructLLMTool, CustomMathTool, RunCodeTool
+from .tools.custom_tools import CustomInstructLLMTool, CustomMathTool
 from .tools.vectorstore_tools import CustomDocumentQueryTool, CustomImageQueryTool
-from .tools.image_tools import CustomGenerateImageTool, SearchImageTool
 
 class CustomBaseAgent():
     """ Base class for custom agents """
@@ -23,59 +21,6 @@ class CustomBaseAgent():
         print("THE OUTPUT FORMAT IS INCORRECT!")
         return f"CHECK YOUR OUTPUT FORMAT! {str(error)[:200]}"
 
-class CustomBardAgent(CustomBaseAgent):
-    """ Use only with Bard """
-    @property
-    def observation_prefix(self) -> str:
-        """Prefix to append the observation with."""
-        return "Observation:"
-
-    def _stop(self):
-        return [f"\n{self.observation_prefix}"]
-
-    # Overriding method from base class - main reason is to avoid sending stop on the last pass
-    def return_stopped_response(
-        self,
-        early_stopping_method: str,
-        intermediate_steps: List[Tuple[AgentAction, str]],
-        **kwargs: Any,
-    ) -> AgentFinish:
-        """Return response when agent has been stopped due to max iterations."""
-        if early_stopping_method == "force":
-            # `force` just returns a constant string - Not currently using
-            return AgentFinish(
-                {"output": "Agent stopped due to iteration limit or time limit."}, ""
-            )
-        if early_stopping_method == "generate":
-            # Generate does one final forward pass
-            thoughts = ""
-            for action, observation in intermediate_steps:
-                thoughts += action.log
-                thoughts += (
-                    f"\n{self.observation_prefix}{observation}\n{self.llm_prefix}" #pylint: disable=no-member line-too-long
-                )
-            # Adding to the previous steps, we now tell the LLM to make a final pred
-            thoughts += (
-                "\n\nI now need to return ONLY a final answer based on the previous steps. "
-                "The answer MUST be prefixed with the following label 'Final Anwer: '."
-                "DO NOT OUTPUT ACTION TAG!"
-            )
-            new_inputs = {"agent_scratchpad": thoughts, "stop":None} #Setting stop to None
-            full_inputs = {**kwargs, **new_inputs}
-            full_output = self.llm_chain.predict(**full_inputs) #pylint: disable=no-member
-            # We try to extract a final answer
-            parsed_output = self.output_parser.parse(full_output) #pylint: disable=no-member
-            if isinstance(parsed_output, AgentFinish):
-                # If we can extract, we send the correct stuff
-                return parsed_output
-            # If we can extract, but the tool is not the final tool,
-            # we just return the full output
-            return AgentFinish({"output": full_output}, full_output)
-
-        raise ValueError(
-            "early_stopping_method should be one of `force` or `generate`, "
-            f"got {early_stopping_method}"
-        )
 
 class CustomSingleActionAgent(CustomBaseAgent, ZeroShotAgent):
     """ Custom single action agents """
@@ -125,16 +70,8 @@ def custom_tools(factory, doc_db, img_db, include_base_tools = False) -> List:
     c_t = [
         CustomInstructLLMTool(factory),
         CustomMathTool(factory),
-        CustomGenerateImageTool(factory,
-            return_direct=True,
-            api_url=factory.env_config['sd_url'],
-            generation_steps=factory.env_config['sd_steps'],
-            output_filename=factory.env_config['image_output_filename']
-        ),
         CustomDocumentQueryTool(factory, doc_db),
-        CustomImageQueryTool(factory, img_db),
-        SearchImageTool(factory, return_direct=True),
-        RunCodeTool(factory, return_direct=True)
+        CustomImageQueryTool(factory, img_db)
     ]
     return c_t + b_t
 

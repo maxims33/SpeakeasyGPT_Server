@@ -45,27 +45,6 @@ class CustomBaseTool(Tool):
 # ------------------------------------------------------------------------
 
 
-class RunCodeTool(CustomBaseTool):
-    """
-     Class representing tool for executing (python) code - Only supported with Bard Experimental
-    """
-    def __init__(self, fact, return_direct = False):
-        super().__init__(fact,
-                name="Run_Code",
-                description="Use this tool when asked to create and execute code / script. "
-                "Pass the original request as the 'Action Input:' for this tool",
-                return_direct = return_direct
-            )
-
-    def _run(self, query: str) -> str:
-        if self.factory.code_support() is True:
-            return self.factory.llm.run_code(query)['code']
-        return "Tool not supported. Check Bard_Experimental setting."
-
-    async def _arun(self, query: str) -> str:
-        """Use the tool asynchronously."""
-        raise NotImplementedError("does not support async")
-
 class CustomMathTool(CustomBaseTool):
     """
     Class representing tool for math operations using expression evaluation
@@ -99,7 +78,7 @@ class CustomInstructLLMTool(CustomBaseTool):
             )
 
     def _run(self, query: str) -> str:
-        return self.factory.llm(query)
+        return self.factory.llm.invoke(query)
 
     async def _arun(self, query: str) -> str:
         """Use the tool asynchronously."""

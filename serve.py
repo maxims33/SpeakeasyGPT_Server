@@ -25,7 +25,7 @@ from speakeasy.customagents import init_agent, init_conversational_agent
 from speakeasy.indexes import load_document_db, load_image_db
 from speakeasy.llmfactory import LLMType, init_factory, init_factory_from_type
 from speakeasy.quiz_content import generate_quiz_questions
-from speakeasy.nutrition_content import generate_menu, retrieve_menu
+from speakeasy.nutrition_content import generate_menu
 from api.schemas import ( 
   deserialize_request,
   deserialize_AccountSettings,
@@ -61,7 +61,6 @@ convo_agent = init_conversational_agent(factory, doc_db, img_db)
 factory_dict = {
     'LLMType.GOOGLE': None,
     'LLMType.GOOGLEAISTUDIO': None,
-    'LLMType.BARD': None,
     'LLMType.HUGGINGFACE': None,
     'LLMType.LOCAL': None,
     'LLMType.OPENAI': None
@@ -85,7 +84,6 @@ def choose_factory(req):
 
 # Import additional routes
 import routes.serve_includes
-import routes.serve_experimental
 
 @app.route("/")
 def ping():
@@ -123,7 +121,6 @@ def query_streaming():
 
   req = deserialize_request(request)
   fact = choose_factory(req)
-  print(f"Factory: {fact}")
 
   prompt = PromptTemplate(input_variables=["input"], template="{input}")
   # Create a Streaming Chain
@@ -179,7 +176,7 @@ def run_agent():
   """ endpoint for zero / few shot agent """
   try:
     req = deserialize_request(request)
-    return format_response(agent.run(req.prompt))
+    return format_response(agent.invoke(req.prompt)['output'])
   except Exception as exc:
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
@@ -191,7 +188,7 @@ def run_convo_agent():
   """ endpoint for conversational agent"""
   try:
     req = deserialize_request(request)
-    return format_response(convo_agent.run(input=req.prompt))
+    return format_response(convo_agent.invoke(input=req.prompt)['output'])
   except Exception as exc:
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
@@ -280,7 +277,6 @@ def generate_nutrition_content():
   try:
     req = deserialize_request(request)
     fact = choose_factory(req)
-    print(f"Factory: {fact}")
     return generate_menu(fact.llm, req.prompt).json()
   except Exception as exc:
     print(f"Caught exception: {exc}")
@@ -298,8 +294,11 @@ def speech_to_text():
     audio = speech.RecognitionAudio(content=base64.b64decode(request.get_json()['audioData']))
 
     config = speech.RecognitionConfig(
-       encoding=speech.RecognitionConfig.AudioEncoding.AMR, # encoding for video/3gpp
-       sample_rate_hertz=8000,
+       # Some of the supported encoding options are: 
+       # MP3, LINEAR16, AMR (encoding for video/3gpp ?), amongst others
+       # See https://cloud.google.com/speech-to-text/docs/encoding
+       encoding=speech.RecognitionConfig.AudioEncoding.MP3,
+       sample_rate_hertz=8000, # Must be 8000 for AMR. Comment out for LINEAR16
        language_code='en-US'  # Replace with your desired language code
     )
 
@@ -335,7 +334,9 @@ def text_to_speech():
 
     # Set the audio configuration
     audio_config = texttospeech.AudioConfig(
-       audio_encoding=texttospeech.AudioEncoding.MP3  # You can choose MP3 or LINEAR16
+       # Some of the supported encoding options are: MP3, LINEAR16
+       # Refer https://cloud.google.com/python/docs/reference/texttospeech/latest/google.cloud.texttospeech_v1.types.AudioEncoding.html
+       audio_encoding=texttospeech.AudioEncoding.MP3
     )
 
     #Perform the text-to-speech synthesis

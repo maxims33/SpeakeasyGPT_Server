@@ -11,10 +11,10 @@ from typing import List, Optional
 from enum import Enum
 import torch
 import os
-from bardapi import Bard
 from langchain_community.llms import HuggingFaceHub
+from langchain_huggingface import HuggingFacePipeline
 from langchain.llms.base import LLM
-from langchain_community.llms import OpenAI, HuggingFacePipeline
+from langchain_community.llms import OpenAI
 from langchain_google_vertexai import VertexAI, VertexAIEmbeddings, ChatVertexAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.embeddings import (
@@ -43,7 +43,6 @@ class LLMType(Enum):
   OPENAI = "OPENAI"
   GOOGLE = "GOOGLE"
   GOOGLEAISTUDIO = "GOOGLEAISTUDIO"
-  BARD = "BARD"
 
 
 def init_factory_from_type(llm_type, env_config):
@@ -59,9 +58,6 @@ def init_factory_from_type(llm_type, env_config):
       fact = GoogleLLMFactory(env_config=env_config)
     case LLMType.GOOGLEAISTUDIO:
       fact = GoogleAIstudioFactory(env_config=env_config)
-    case LLMType.BARD:
-      fact = BardLLMFactory(env_config=env_config,
-                            api_timeout=env_config['google_llm_api_timeout'])
     case _:
       fact = LocalLLMFactory(env_config=env_config)
   return fact
@@ -105,14 +101,6 @@ class LLMFactory():
   def construct_llm(self):
     """Construct the LLM component for the given model"""
     raise NotImplementedError("Must be implemented in subclass")
-
-  def image_support(self) -> bool:
-    """ Added to attempt add support for Bardapi Experimental Features """
-    return False
-
-  def code_support(self) -> bool:
-    """ Added to attempt add support for Bardapi Experimental Features """
-    return False
 
 
 class LLMAndEmbeddingsFactory(LLMFactory):
@@ -310,121 +298,4 @@ class GoogleAIstudioFactory(LLMAndEmbeddingsFactory):
         model=self.model_name, google_api_key=os.environ["GOOGLE_API_KEY"])
 
 
-class BardLLMFactory(LLMAndEmbeddingsFactory):
-  """
-    Factory for Bard
-    Assumes API key is already set as environment variable,
-    for example using os.environ['_BARD_API_KEY']="xxxxxxxx"
-    Set environment variable BARD_EXPERIMENTAL to True for using Bardapi Experimental features
-    (assumes using github branch of Bardapi)
-    """
 
-  def __init__(self, env_config=None, api_timeout=30):
-    self.api_timeout = api_timeout
-    super().__init__(env_config=env_config)
-
-  def __repr__(self):
-    return f"""<BardLLMFactory(model_name=Bard),
- embedding_model_name={self.embedding_model_name}>"""
-
-  def construct_llm(self):
-    """ LLM constructor method """
-    self.llm = BardLLMWrapper(timeout=self.api_timeout)
-
-  def image_support(self) -> bool:
-    """ Added to attempt add support for Bardapi Experimental Features """
-    return self.env_config['bard_experimental']
-
-  def code_support(self) -> bool:
-    """ Added to attempt add support for Bardapi Experimental Features """
-    return self.env_config['bard_experimental']
-
-
-# ----------------------- LLM Wrappers ------------------------------------------------
-
-from bardapi import BardCookies
-
-
-class BardLLMWrapper(LLM):
-  """
-    Simple wrapper which operates similar to langchain LLM,
-    as Bard is Bardapi is not supported by langchain
-    Attempted add support for Bard API Experimental fetures
-    such as: retrieveing images, links and code, as well as running code.
-    """
-  googlellm: Bard = None
-  code_runner: Bard = None
-  last_response_dict = {'content': '', 'images': [], 'links': [], 'code': ''}
-  response_element = 'content'
-
-  def __init__(self, timeout=None):
-    super().__init__()
-    cookie_dict = {
-
-        # Any cookie values you want to pass session object.
-    }
-    self.googlellm = BardCookies(cookie_dict=cookie_dict,
-                                 timeout=timeout)  # Bard()
-    self.code_runner = BardCookies(cookie_dict=cookie_dict,
-                                   timeout=timeout,
-                                   run_code=True)
-
-  def _call(  #pylint: disable=unused-argument
-      self,
-      prompt: str,
-      stop: Optional[List[str]] = None,
-      run_manager=None,
-  ) -> str:
-    print(f"\nInput Prompt::::::::::::::::::::::::\n{prompt}")  # For debugging
-    response_dict = self.googlellm.get_answer(prompt)
-    print(f"\nresponse_dict::::::::::::::::::::::::\n{response_dict}"
-          )  # For debugging
-    self.last_response_dict = response_dict
-    full_resp = response_dict[self.response_element]
-    resp_frag = full_resp.replace('**',
-                                  '')  # Replace the chars Bard sometimes adds
-    if stop is not None:
-      if not isinstance(stop, List):
-        stop = stop()
-      for stp in stop:
-        tmp = full_resp.split(stp)  # Hacked stop sequence handling
-        if len(tmp) > 1:
-          resp_frag = tmp[0]
-    print(f"\nFull Response Dict::::::::::::::::::::::\n{response_dict}")
-    #print(f"\nFull Response until stop sequence:::::::::\n{resp_frag}") # For debugging
-    self.response_element = 'content'  # Set the next response back to content
-    return resp_frag
-
-  @property
-  def _llm_type(self) -> str:
-    return "google-bard"
-
-  def get_last_images(self) -> List:
-    """ Methods for interacting with Bard API Experimental features """
-    return self.last_response_dict['images']
-
-  def get_last_image_links(self) -> List:
-    """ Methods for interacting with Bard API Experimental features """
-    return self.last_response_dict['links']
-
-  def get_last_code_fragment(self) -> str:
-    """ Methods for interacting with Bard API Experimental features """
-    return self.last_response_dict['code']
-
-  def set_next_response_for_images(self):
-    """ Methods for interacting with Bard API Experimental features """
-    self.response_element = 'images'
-
-  def set_next_response_for_links(self):
-    """ Methods for interacting with Bard API Experimental features """
-    self.response_element = 'links'
-
-  def set_next_response_for_code(self):
-    """ Methods for interacting with Bard API Experimental features """
-    self.response_element = 'code'
-
-  def run_code(self, prompt):
-    """ Methods for interacting with Bard API Experimental features """
-    resp = self.code_runner.get_answer(
-        prompt)  # How to get the output of the code execution?
-    return resp

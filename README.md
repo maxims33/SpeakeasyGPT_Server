@@ -378,7 +378,7 @@ DOCS_PERSIST_DIRECTORY=Path to the directory where the document vector store is 
 
 IMAGES_PERSIST_DIRECTORY=Path to the directory where the image vector store is persisted.
 
-FACTORY_TYPE=Specifies the type of LLM factory to use (e.g., OPENAI, HUGGINGFACE, GOOGLE, BARD).
+FACTORY_TYPE=Specifies the type of LLM factory to use (e.g., OPENAI, HUGGINGFACE, GOOGLE).
 
 SD_URL=URL of the Stable Diffusion API endpoint for image generation (e.g., http://127.0.0.1:7860).
 
@@ -388,15 +388,12 @@ IMAGE_DIRECTORY=Folder where images are stored.
 
 GOOGLE_LLM_API_TIMEOUT=Timeout in seconds for Google LLM API requests.
 
-BARD_EXPERIMENTAL=Enables or disables experimental features of the Bard API (e.g., image and code generation).
 ```
 ### API Keys and Credentials:
 ```
 OPENAI_API_KEY=API key for OpenAI.
 
 HUGGINGFACEHUB_API_TOKEN=API token for Hugging Face Hub.
-
-_BARD_API_KEY=API key for Bard (Google AI).
 
 GOOGLE_APPLICATION_CREDENTIALS=Path to the JSON file containing Google Cloud service account 
 credentials.
@@ -416,7 +413,6 @@ The project is organized into several modules and files:
 * **indexes.py:** Handles the creation and loading of vector stores for documents and images.
 * **customloaders.py:** Defines custom loaders for handling specific file types (e.g., image captions).
 * **vectorstore_tools.py:** Implements tools for querying vector stores.
-* **image_tools.py:** Implements tools for generating and searching images.
 * **custom_tools.py:** Defines custom tools for various tasks (e.g., math calculations, code execution).
 * **models.py:** Defines database models for user accounts and settings using SQLAlchemy.
 
@@ -466,7 +462,6 @@ env_variables:
   ENABLE_DEBUG: False
   OPENAI_API_KEY: your_openai_api_key
   HUGGINGFACEHUB_API_TOKEN: your_huggingface_api_token
-  _BARD_API_KEY: your_bard_api_key
   GOOGLE_APPLICATION_CREDENTIALS: path/to/your/credentials.json
   DOCS_PERSIST_DIRECTORY: db_docs/
   IMAGES_PERSIST_DIRECTORY: db_images/
