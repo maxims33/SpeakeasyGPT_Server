@@ -25,7 +25,7 @@ class CustomDocumentQueryTool(CustomBaseTool):
             retriever=self.vector_db.as_retriever(search_kwargs={"k":self.factory.max_k}),
             input_key="question",
             return_source_documents=True)
-        return chain(query)['result'] # Should enhance to return the source document paths
+        return chain.invoke(query)['result'] # Should enhance to return the source document paths
 
     async def _arun(self, query: str) -> str:
         raise NotImplementedError("does not support async")
@@ -48,7 +48,7 @@ class CustomImageQueryTool(CustomBaseTool):
             retriever=self.vector_db.as_retriever(search_kwargs={"k":self.factory.max_k}),
             input_key="question",
             return_source_documents=True)
-        return chain(query)['result']
+        return chain.invoke(query)['result']
 
     async def _arun(self, query: str) -> str:
         raise NotImplementedError("does not support async")
