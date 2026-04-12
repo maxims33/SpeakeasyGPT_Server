@@ -2,14 +2,15 @@
 Flask rest service implementation
 """
 import langchain
-from langchain_core.prompts import PromptTemplate
+#from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 import flask
 import json
 import base64
 from  google.cloud import speech, texttospeech
 from flask import Flask, jsonify, request, send_from_directory, stream_with_context
 from flask_cors import CORS, cross_origin
-from langchain.chains import RetrievalQA
+from langchain_classic.chains import RetrievalQA
 from sqlalchemy.orm import Session
 
 from env_params import env_config
@@ -103,9 +104,12 @@ def query_llm():
     req = deserialize_request(request)
     fact = choose_factory(req)
     print(f"Factory: {fact}")
-    return format_response(fact.llm.invoke(req.prompt))
-    #return format_response(fact.llm.invoke(req.prompt).content) # ChatGoogleGenerativeAI
+    response = fact.llm.invoke(req.prompt)
+    return format_response(response)
   except Exception as exc:
+    # Sort out exception logging at next opportunity
+    import traceback
+    traceback.print_exc()
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 
@@ -122,12 +126,8 @@ def query_streaming():
   req = deserialize_request(request)
   fact = choose_factory(req)
 
-  prompt = PromptTemplate(input_variables=["input"], template="{input}")
-  # Create a Streaming Chain
-  # Unclear yet how to do streaming without using expression language
-  chain = prompt | fact.llm 
-  
-  response = flask.Response(chain.stream({'input': req.prompt}))
+  chain = fact.llm | StrOutputParser()  
+  response = flask.Response(chain.stream(req.prompt))
   response.content_type = "text/event-stream"
   return response
 
@@ -147,6 +147,8 @@ def search_docs():
         return_source_documents=True)
     return format_response(chain.invoke(req.prompt)['result'])
   except Exception as exc:
+    import traceback
+    traceback.print_exc()
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 
@@ -166,6 +168,8 @@ def search_images():
         return_source_documents=True)
     return format_response(chain.invoke(req.prompt)['result'])
   except Exception as exc:
+    import traceback
+    traceback.print_exc()
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 
@@ -175,9 +179,14 @@ def search_images():
 def run_agent():
   """ endpoint for zero / few shot agent """
   try:
+    from langchain_core.messages import HumanMessage
     req = deserialize_request(request)
-    return format_response(agent.invoke(req.prompt)['output'])
+    # LangGraph agent returns the full state, including all messages
+    result = agent.invoke({"messages": [HumanMessage(content=req.prompt)]})
+    return format_response(result['messages'][-1])
   except Exception as exc:
+    import traceback
+    traceback.print_exc()
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 
@@ -187,9 +196,15 @@ def run_agent():
 def run_convo_agent():
   """ endpoint for conversational agent"""
   try:
+    from langchain_core.messages import HumanMessage
     req = deserialize_request(request)
-    return format_response(convo_agent.invoke(input=req.prompt)['output'])
+    # For conversational agents with memory, we need a thread_id
+    config = {"configurable": {"thread_id": "default_user"}}
+    result = convo_agent.invoke({"messages": [HumanMessage(content=req.prompt)]}, config=config)
+    return format_response(result['messages'][-1])
   except Exception as exc:
+    import traceback
+    traceback.print_exc()
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 
@@ -206,6 +221,8 @@ def authenticateUser():
       return '{"error": "authentication failed"}'
     return format_AccountSettings(respobj)
   except Exception as exc:
+    import traceback
+    traceback.print_exc()
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 
@@ -223,6 +240,8 @@ def getAccountSettings():
       return "{}"
     return format_AccountSettings(respobj)
   except Exception as exc:
+    import traceback
+    traceback.print_exc()
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 
@@ -254,6 +273,8 @@ def setAccountSettings():
       update(u, session)
     return "{}"
   except Exception as exc:
+    import traceback
+    traceback.print_exc()
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 
@@ -266,6 +287,8 @@ def generate_quiz_content():
     category = request.args.get('category')
     return generate_quiz_questions(factory.llm, category).json()
   except Exception as exc:
+    import traceback
+    traceback.print_exc()
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 
@@ -279,6 +302,8 @@ def generate_nutrition_content():
     fact = choose_factory(req)
     return generate_menu(fact.llm, req.prompt).json()
   except Exception as exc:
+    import traceback
+    traceback.print_exc()
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 
@@ -313,6 +338,8 @@ def speech_to_text():
     print(u'Transcript: {}'.format(first_alternative))
     return json.dumps({ 'text': first_alternative })
   except Exception as exc:
+    import traceback
+    traceback.print_exc()
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 
@@ -322,7 +349,8 @@ def speech_to_text():
 def text_to_speech():
   """ endpoint for converting speech to text """
   try:
-    llm_response = factory.llm.invoke(request.get_json()['text'])
+    response = factory.llm.invoke(request.get_json()['text'])
+    llm_response = StrOutputParser().invoke(response)
     
     client = texttospeech.TextToSpeechClient()
 
@@ -349,6 +377,8 @@ def text_to_speech():
       'audio': base64.b64encode(response.audio_content).decode('utf-8')
     })
   except Exception as exc:
+    import traceback
+    traceback.print_exc()
     print(f"Caught exception: {exc}")
     return format_response('Oops sorry an error occured.')
 

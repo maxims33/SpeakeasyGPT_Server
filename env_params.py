@@ -14,7 +14,7 @@ def default_variables():
         'factory_type': 'GOOGLE',
         'image_directory':'./generated_images/',
         'google_llm_api_timeout': 30,
-        'auth': 'firebase', # dummy / firebase
+        'firebase': 'dummy', # dummy / firebase
 
         #'local_model_name': 'google/flan-t5-large',
         #'device_id': 'cpu',

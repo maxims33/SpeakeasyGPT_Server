@@ -4,6 +4,7 @@
 source ./scripts/common_env.sh
 
 export ENABLE_DEBUG=True
+export FACTORY_TYPE=GOOGLE
 
 ingest_path="./filebox/";
 do_clean=false;

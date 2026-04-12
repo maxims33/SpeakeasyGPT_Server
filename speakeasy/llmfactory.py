@@ -7,21 +7,17 @@ Module for various types of LLM Factory
 #TODO How to get load_in_8bit=True working in windows? quantized models only?
 #TODO Removing unused code and imports
 """
-from typing import List, Optional
 from enum import Enum
 import torch
 import os
 from langchain_community.llms import HuggingFaceHub
-from langchain_huggingface import HuggingFacePipeline
-from langchain.llms.base import LLM
-from langchain_community.llms import OpenAI
-from langchain_google_vertexai import VertexAI, VertexAIEmbeddings, ChatVertexAI
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_community.embeddings import (
-    HuggingFaceEmbeddings,
-    #    HuggingFaceInstructEmbeddings,
-)
+from langchain_huggingface import HuggingFacePipeline, ChatHuggingFace
+from langchain_community.chat_models import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
+#from langchain_community.embeddings import ( HuggingFaceInstructEmbeddings )
 from langchain_community.embeddings.openai import OpenAIEmbeddings
+from langchain_core.output_parsers import StrOutputParser
 #from langchain.schema import AIMessage, HumanMessage, SystemMessage
 from transformers import (
     pipeline,
@@ -55,9 +51,9 @@ def init_factory_from_type(llm_type, env_config):
     case LLMType.OPENAI:
       fact = OpenAIFactory(env_config=env_config)
     case LLMType.GOOGLE:
-      fact = GoogleLLMFactory(env_config=env_config)
+      fact = GoogleLLMFactory(env_config=env_config, use_vertexai=True)
     case LLMType.GOOGLEAISTUDIO:
-      fact = GoogleAIstudioFactory(env_config=env_config)
+      fact = GoogleLLMFactory(env_config=env_config, use_vertexai=False)
     case _:
       fact = LocalLLMFactory(env_config=env_config)
   return fact
@@ -78,7 +74,7 @@ class LLMFactory():
     """
   temperature = 0
   model_name = ""
-  max_length = 512
+  max_length = 4096
   max_k = 1
 
   def __init__(self,
@@ -134,12 +130,11 @@ class LLMAndEmbeddingsFactory(LLMFactory):
 
   def construct_embeddings(self):
     """Construct the relevant Embeddings"""
-    self.embeddings = None  #HuggingFaceEmbeddings(
-
-
-#            model_name=self.embedding_model_name,
-#            model_kwargs={"device": self.embedding_device_id
-#        })
+    self.embeddings = HuggingFaceEmbeddings(
+            model_name=self.embedding_model_name,
+            #model_kwargs={"device": self.embedding_device_id
+            model_kwargs={"device": "cpu"
+        })
 
 # -----------------------------------------------------------------------------------
 
@@ -156,7 +151,7 @@ class OpenAIFactory(LLMAndEmbeddingsFactory):
 
   def construct_llm(self):
     """ LLM constructor method """
-    self.llm = OpenAI()  # ChatOpenAI()
+    self.llm = ChatOpenAI()
 
   def construct_embeddings(self):
     """ Embeddings constructor method """
@@ -179,11 +174,13 @@ class HuggingFaceFactory(LLMAndEmbeddingsFactory):
 
   def construct_llm(self):
     """ LLM constructor method """
-    self.llm = HuggingFaceHub(repo_id=self.model_name,
+    llm = HuggingFaceHub(repo_id=self.model_name,
                               model_kwargs={
                                   "temperature": self.temperature,
                                   "max_length": self.max_length
                               })
+    #TODO Check/fix prompt template error. Reer what was done for LOCAL factory
+    self.llm = ChatHuggingFace(llm=llm)
 
 
 # Seq2Seq Models: "google/flan-t5-large", "lmsys/fastchat-t5-3b-v1.0"
@@ -205,17 +202,18 @@ class LocalLLMFactory(LLMAndEmbeddingsFactory):
     return f"""<LocalLLMFactory(model_name={self.model_name},
  embedding_model_name={self.embedding_model_name})>"""
 
-  def construct_llm_from_id(self):
-    """ LLM constructor method """
-    # Handle device mapping
-    self.llm = HuggingFacePipeline.from_model_id(  #pylint: disable=attribute-defined-outside-init
-        model_id=self.model_name,
-        task="text2text-generation",
-        device=-1,
-        model_kwargs={
-            "temperature": self.temperature,
-            "max_length": self.max_length
-        })
+  #def construct_llm_from_id(self):
+  #  """ LLM constructor method """
+  #  # Handle device mapping
+  #  llm = HuggingFacePipeline.from_model_id(  #pylint: disable=attribute-defined-outside-init
+  #      model_id=self.model_name,
+  #      task="text2text-generation",
+  #      device=-1,
+  #      model_kwargs={
+  #          "temperature": self.temperature,
+  #          "max_length": self.max_length
+  #      })
+  #  self.llm = ChatHuggingFace(llm=llm)
 
   def construct_llm(self):
     """ LLM constructor method """
@@ -239,7 +237,10 @@ class LocalLLMFactory(LLMAndEmbeddingsFactory):
                     temperature=self.temperature,
                     top_p=0.95,
                     repetition_penalty=1.15)
-    self.llm = HuggingFacePipeline(pipeline=pipe)
+    llm = HuggingFacePipeline(pipeline=pipe)
+    if not tokenizer.chat_template:
+        tokenizer.chat_template = "{% for message in messages %}{{ message['role'] + ': ' + message['content'] + '\\n' }}{% endfor %}{% if add_generation_prompt %}{{ 'assistant: ' }}{% endif %}"
+    self.llm = ChatHuggingFace(llm=llm, tokenizer=tokenizer)
 
   # Uncomment if want to use the instructor embeddings for local factory,
   # instead of the hugging face embeddings
@@ -254,48 +255,29 @@ class LocalLLMFactory(LLMAndEmbeddingsFactory):
 
 class GoogleLLMFactory(LLMAndEmbeddingsFactory):
   """
-    Factory for Google LLM components, I.e.: Vertex AI
-    """
+  Factory for Vertex AI or Google AI Studio LLM components.
+  """
 
-  def __init__(self, env_config=None, model_name="gemini-2.0-flash", embedding_model_name="text-embedding-005", max_k=4):
+  def __init__(self, env_config=None, model_name="gemini-3.1-pro-preview", embedding_model_name="gemini-embedding-001", max_k=4, use_vertexai=True):
+    self.use_vertexai = use_vertexai
     super().__init__(max_k=max_k, model_name=model_name, embedding_model_name=embedding_model_name, env_config=env_config)
 
   def __repr__(self):
     return f"<GoogleLLMFactory(model_name={self.model_name}) embedding_model_name={self.embedding_model_name}>"
 
   def construct_llm(self):
-    """ LLM constructor method """
-    self.llm = VertexAI(  # ChatVertexAI
-        model_name=self.model_name,
+    """LLM constructor method."""
+    self.llm = ChatGoogleGenerativeAI(
+        model=self.model_name, 
         max_output_tokens=self.max_length,
         temperature=self.temperature,
         top_p=0.8,
         top_k=40,
-        verbose=True)
+        verbose=True,
+        location="global",
+        vertexai=self.use_vertexai,
+        )
 
   def construct_embeddings(self):
-    """ Embdings constructor method """
-    self.embeddings = VertexAIEmbeddings(self.embedding_model_name)
-
-
-class GoogleAIstudioFactory(LLMAndEmbeddingsFactory):
-  """
-  Factory for Google AI Studio LLM components.
-  """
-
-  def __init__(self, env_config=None, model_name="gemini-2.0-flash", max_k=4):
-    super().__init__(max_k=max_k, model_name=model_name, env_config=env_config)
-
-  def __repr__(self):
-    return f"<GoogleAIstudioFactory(model_name={self.model_name})>"
-
-  def construct_llm(self):
-    """LLM constructor method."""
-    #TODO: AI studio - Add embeddings
-    #TODO: AI studio - Check if need the key handling here
-    #TOOD: AI studio - Agents not able to be instansiated - May need wrapper?
-    self.llm = ChatGoogleGenerativeAI(
-        model=self.model_name, google_api_key=os.environ["GOOGLE_API_KEY"])
-
-
-
+      """ Embdings constructor method """
+      self.embeddings = GoogleGenerativeAIEmbeddings(model=self.embedding_model_name)

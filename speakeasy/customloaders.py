@@ -4,9 +4,9 @@ Module for custom handling of loading files
 
 from typing import List, Union
 from PIL import Image
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from langchain_community.document_loaders import DirectoryLoader
-from langchain.document_loaders.base import BaseLoader
+from langchain_core.document_loaders import BaseLoader
 
 class CustomCaptionLoader(BaseLoader):
     """ Load captions of images """

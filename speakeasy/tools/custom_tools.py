@@ -2,12 +2,12 @@
 Module for custom langchain tools
 """
 
-from langchain.tools import Tool
-from langchain.tools.base import ToolException
-from langchain.chains import LLMMathChain
-from langchain.chains.llm_math.prompt import PROMPT
-from langchain.vectorstores.base import VectorStore
+from langchain_core.tools import Tool, ToolException
+from langchain_classic.chains import LLMMathChain
+from langchain_classic.chains.llm_math.prompt import PROMPT
+from langchain_core.vectorstores import VectorStore
 from speakeasy.llmfactory import LLMFactory
+from langchain_core.output_parsers import StrOutputParser
 
 class CustomBaseTool(Tool):
     """
@@ -59,7 +59,7 @@ class CustomMathTool(CustomBaseTool):
     def _run(self, query: str) -> str:
         p_t = PROMPT
         math_chain = LLMMathChain.from_llm(self.factory.llm, verbose=True, prompt=p_t)
-        return math_chain.run(query)
+        return math_chain.invoke(query)['answer']
 
     async def _arun(self, query: str) -> str:
         """Use the tool asynchronously."""
@@ -78,7 +78,9 @@ class CustomInstructLLMTool(CustomBaseTool):
             )
 
     def _run(self, query: str) -> str:
-        return self.factory.llm.invoke(query)
+        # LLM objects in modern LangChain use .invoke()
+        response = self.factory.llm.invoke(query)
+        return StrOutputParser().invoke(response)
 
     async def _arun(self, query: str) -> str:
         """Use the tool asynchronously."""

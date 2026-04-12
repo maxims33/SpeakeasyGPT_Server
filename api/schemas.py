@@ -1,6 +1,7 @@
 from marshmallow import Schema, fields, post_load
 from marshmallow_enum import EnumField
 from speakeasy.llmfactory import LLMType
+from langchain_core.output_parsers import StrOutputParser
 
 # ------- Serializing / Deserializing ------------------
 
@@ -51,14 +52,7 @@ class ResponseSchema(Schema):
 def format_response(respstr):
   """ format the response json """
   schema = ResponseSchema(many=False, partial=True)
-  respobj = Response(respstr)
-
-  # Basic image handling
-  image_tag = 'BASE64ENCODED:'
-  if respstr.startswith(image_tag):
-    respobj.response = 'Here is the image.'
-    respobj.image = respstr[len(image_tag):]  # Strip BASE64ENCODED:
-
+  respobj = Response(StrOutputParser().invoke(respstr))
   return schema.dump(respobj)
 
 # AccountSettings
@@ -108,13 +102,11 @@ def deserialize_AccountSettings(req_json):
 
 
 # Handle id
-# Handle password
 # Is this class even used?
 class AccountSettingsResponseSchema(Schema):
   """ The response schema"""
   #  id = fields.Int(required=False)
   username = fields.Str(required=False)
-  password = fields.Str(required=False)  # To remove
   fullname = fields.Str(required=False)
   gender = fields.Str(required=False)
   orientation = fields.Str(required=False)
@@ -123,5 +115,5 @@ class AccountSettingsResponseSchema(Schema):
 
 def format_AccountSettings(respobj):
   """ format the response json """
-  schema = AccountSettingsSchema(many=False, partial=True)
+  schema = AccountSettingsResponseSchema(many=False, partial=True)
   return schema.dump(respobj)

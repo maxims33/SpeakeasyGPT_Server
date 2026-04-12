@@ -3,7 +3,7 @@ Module with tools for document Q & A.
 #TODO Consider merging Image and Document query into Vectorstore router
 """
 
-from langchain.chains import RetrievalQA
+from langchain_classic.chains import RetrievalQA
 from .custom_tools import CustomBaseTool
 
 class CustomDocumentQueryTool(CustomBaseTool):

@@ -4,12 +4,11 @@ Firebase Token Authentication
 from flask import jsonify, request
 from firebase_admin import auth, credentials, initialize_app
 from datetime import datetime
+import os
 
 # Initialize Firebase Admin
-cred = credentials.Certificate(
-    #TODO externalize key paths
-    #"keys/maxims-firebase-firebase-adminsdk-hjau4-dca9d66150.json")
-    "keys/bba-firebase-firebase-adminsdk-fbsvc-5b7bec3b6f.json")
+cred_path = os.environ.get("FIREBASE_CRED_PATH")
+cred = credentials.Certificate(cred_path)
 initialize_app(cred)
 
 
@@ -19,8 +18,11 @@ def verify_firebase_token():
         return None
     try:
         token = request.headers['Authorization'].split(' ').pop()
-        print(f"Authorization Token: {token}")
-        log_token_to_file(token)
+        
+        #For debugging
+        #print(f"Authorization Token: {token}")
+        #log_token_to_file(token)
+        
         decoded_token = auth.verify_id_token(token)
         #decoded_token = auth.verify_id_token(
         #    token, check_revoked=True

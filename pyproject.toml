@@ -1,4 +1,3 @@
-
 [project]
 name = "speakeasygpt-server"
 version = "0.2.0"
@@ -12,32 +11,33 @@ dependencies = [
     "bitsandbytes>=0.35.4",
     "clickhouse-connect~=0.5.22", # Downgrade to fix warrning
     "cython>=0.29.34",
-    "flask>=3.1.1",
+    "flask>=3.1.3",
     "flask-cors>=4.0.2",
     "google-cloud-texttospeech>=2.16.3",
     "google-cloud-speech>=2.26.0",
     "huggingface-hub>=0.19.3",
-    "langchain==0.3.*",
-    "langchain-community==0.3.*",
-    "langchain-google-genai==2.*",
-    "langchain-google-vertexai==2.*",
+    "langchain>=0.3.0",
+    "langchain-community>=0.4.0",
+    "langchain-classic>=1.0.0",
+    "langchain-google-genai>=4.0.0",
+    #"langchain-google-vertexai>=2.0.0",
     "langchain-chroma>=0.2.5",
     "langchain-huggingface>=0.3.1",
-    "marshmallow>=3.20.1",
+    "marshmallow>=3.26.2",
     "marshmallow-enum>=1.5.1",
     "openai>=1.55.1",
-    "pdfminer.six==20221105",
-    #"pillow>=11.3.0", # Can this be removed?
+    "pdfminer.six>=20251230",
+    "pillow>=12.1.1",
     "torch>=2.8.0",
     "torchvision>=0.23.0",
     "pytorch-lightning>=2.5.2",
     "transformers>=4.55.0",
-    "unstructured~=0.6.11", # Made specific (vulnerable?)
+    "unstructured>=0.18.18",
     "tabulate>=0.9.0", # Required for unstructured (pdfs)
     "clip-interrogator~=0.5.4", # Made specific
     "accelerate>=0.18.0",
     "sentence-transformers>=4.1.0",
-    "chromadb>=0.4.6",
+    "chromadb>=1.0.0",
     "pydantic~=2.9.0",
     "langdetect>=1.0.9",
     "sqlalchemy>=2.0.21",
@@ -45,12 +45,20 @@ dependencies = [
     "requests>=2.32.4",
     "firebase-admin>=6.6.0",
     "gunicorn>=23.0.0",
-    # Security patching - Potentially can remove these now
-    #"starlette>=0.47.2",
-    #"nltk>=3.9",
-    #"aiohttp>=3.12.15",
-    #"setuptools>=80.9.0",
-    #"werkzeug>=3.1.3",
+    "numexpr>=1.0.0",
+    "nltk>=3.9.4",
+    "authlib>=1.6.9",
+    "urllib3>=2.6.3",
+    "aiohttp>=3.13.5",
+    "cryptography>=46.0.5",
+    "pyjwt>=2.12.0",
+    "orjson>=3.11.6",
+    "protobuf>=6.33.6",
+    "pyasn1>=0.6.3",
+    "filelock>=3.20.3",
+    "werkzeug>=3.1.6",
+    "pygments>=2.20.0",
+    "langsmith>=0.6.3",
 ]
 
 [tool.pyright]
