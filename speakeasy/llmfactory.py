@@ -132,8 +132,7 @@ class LLMAndEmbeddingsFactory(LLMFactory):
     """Construct the relevant Embeddings"""
     self.embeddings = HuggingFaceEmbeddings(
             model_name=self.embedding_model_name,
-            #model_kwargs={"device": self.embedding_device_id
-            model_kwargs={"device": "cpu"
+            model_kwargs={"device": self.embedding_device_id
         })
 
 # -----------------------------------------------------------------------------------
@@ -202,6 +201,7 @@ class LocalLLMFactory(LLMAndEmbeddingsFactory):
     return f"""<LocalLLMFactory(model_name={self.model_name},
  embedding_model_name={self.embedding_model_name})>"""
 
+  # Unused
   #def construct_llm_from_id(self):
   #  """ LLM constructor method """
   #  # Handle device mapping

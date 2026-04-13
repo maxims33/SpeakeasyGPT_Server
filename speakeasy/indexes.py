@@ -35,7 +35,6 @@ def init_document_db(factory, file_path, persist_dir, chunk_size = 1500, chunk_o
     )
     texts = load_document_helper(file_path, "./*.pdf",
         UnstructuredPDFLoader, text_splitter)
-    #PydPDFLoader loads a doc per page
     texts += load_document_helper(file_path, "./*.html",
         UnstructuredHTMLLoader, text_splitter)
     texts += load_document_helper(file_path, "./*.pptx",
