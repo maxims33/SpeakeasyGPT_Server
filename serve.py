@@ -1,7 +1,9 @@
 """
 Flask rest service implementation
 """
+
 import langchain
+import nltk # Unused but required at top
 #from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 import flask

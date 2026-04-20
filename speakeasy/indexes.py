@@ -8,10 +8,9 @@ from langchain_community.document_loaders import (
         DirectoryLoader,
         TextLoader,
         CSVLoader,
-        UnstructuredPDFLoader,
-        UnstructuredHTMLLoader,
-        UnstructuredPowerPointLoader,
-        UnstructuredWordDocumentLoader
+        PyPDFLoader,
+        BSHTMLLoader,
+        Docx2txtLoader
 )
 from .customloaders import DirectoryCaptionLoader
 
@@ -34,13 +33,11 @@ def init_document_db(factory, file_path, persist_dir, chunk_size = 1500, chunk_o
         chunk_overlap  = chunk_overlap
     )
     texts = load_document_helper(file_path, "./*.pdf",
-        UnstructuredPDFLoader, text_splitter)
+        PyPDFLoader, text_splitter)
     texts += load_document_helper(file_path, "./*.html",
-        UnstructuredHTMLLoader, text_splitter)
-    texts += load_document_helper(file_path, "./*.pptx",
-        UnstructuredPowerPointLoader, text_splitter)
+        BSHTMLLoader, text_splitter)
     texts += load_document_helper(file_path, "./*.docx",
-        UnstructuredWordDocumentLoader, text_splitter)
+        Docx2txtLoader, text_splitter)
     texts += load_document_helper(file_path, "./*.csv",
         CSVLoader, text_splitter)
     texts += load_document_helper(file_path, "./*.txt",
