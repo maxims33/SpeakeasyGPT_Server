@@ -280,4 +280,8 @@ class GoogleLLMFactory(LLMAndEmbeddingsFactory):
 
   def construct_embeddings(self):
       """ Embdings constructor method """
-      self.embeddings = GoogleGenerativeAIEmbeddings(model=self.embedding_model_name)
+      self.embeddings = GoogleGenerativeAIEmbeddings(
+        model=self.embedding_model_name,
+        location="global",
+        vertexai=self.use_vertexai
+      )
