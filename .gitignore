@@ -162,5 +162,6 @@ cython_debug/
 filebox/
 db_images/
 db_docs/
+img_embeddings/
 keys/
 token_log.txt
