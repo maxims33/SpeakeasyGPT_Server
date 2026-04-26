@@ -71,6 +71,67 @@ uv sync
 * `uv add [package_name]` - This will add the package to the Pipfile and install it in the virtual environment.
 
 
+## Database configuration
+
+The relational database that stores user accounts and recipes is **PostgreSQL by default** but the backend is configurable through a single environment variable, so SQLite (the original backend) remains a one-line fallback.
+
+### Choosing the backend
+
+The connection URL is resolved by `env_params._resolve_database_url()` in this order:
+
+1. `DATABASE_URL` — any SQLAlchemy URL. Examples:
+   * `postgresql+psycopg://user:pass@host:5432/dbname` (Postgres, recommended)
+   * `sqlite:///sql.db` (legacy local SQLite file — use this to switch back)
+2. Standard `PG*` env vars (`PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`) — the app builds a `postgresql+psycopg://` URL automatically. This is what Replit's managed Postgres exposes.
+3. Final fallback: `sqlite:///sql.db`.
+
+Legacy `postgres://` and `postgresql://` URL prefixes are auto-rewritten to use the modern `psycopg` (v3) driver.
+
+The Postgres driver is pulled in via the `psycopg[binary]` dependency in `pyproject.toml` / `requirements.txt`.
+
+### Creating the schema
+
+After provisioning a database (Postgres on Replit, or any compatible Postgres / SQLite), create the tables:
+
+```bash
+python -m speakeasy.orm.init_db
+```
+
+This runs `Base.metadata.create_all(engine)` against whatever `DATABASE_URL` resolves to and prints the resulting table list. Safe to re-run — it's a no-op for tables that already exist.
+
+The legacy `sql/init_sqlite.py` script still works but now just delegates to the command above.
+
+### Migrating existing data from SQLite to Postgres
+
+If you have an existing `sql.db` file you want to bring over to Postgres, run the one-off migration:
+
+```bash
+# Defaults: source = sqlite:///sql.db, target = $DATABASE_URL (whatever the app uses)
+python -m scripts.sqlite_to_postgres
+
+# Or override either side explicitly:
+python -m scripts.sqlite_to_postgres \
+  --source sqlite:///sql.db \
+  --target "$DATABASE_URL"
+```
+
+The script:
+
+* Opens both engines, ensures the schema exists on the target, and copies all rows for `User`, `Address` and `Recipe` inside one transaction.
+* Is **idempotent** — rows whose primary key already exists on the target are skipped, so re-running it is safe.
+* On Postgres, also bumps each table's primary-key sequence past the highest copied id so future inserts don't collide.
+* **Leaves the source `sql.db` file completely untouched**, so you can fall back to SQLite at any time by setting `DATABASE_URL=sqlite:///sql.db`.
+
+### Switching back to SQLite
+
+```bash
+export DATABASE_URL=sqlite:///sql.db
+./scripts/runserver.sh
+```
+
+No code changes required.
+
+
 ## Scripts Usage Guide
 
 This guide provides instructions on how to use the shell scripts located in the scripts folder of the SpeakeasyGPT_Server project. These scripts automate common tasks such as running the server, ingesting data, and cleaning databases.

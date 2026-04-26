@@ -1,20 +1,19 @@
-import sqlite3
+"""
+Legacy SQLite-only initializer. Kept for backwards compatibility — the
+project now provisions schema in a backend-agnostic way via SQLAlchemy.
 
-conn = sqlite3.connect("sql.db")
-c = conn.cursor()
+Prefer:
 
-c.execute('''
-CREATE TABLE IF NOT EXISTS AccountSettings
-(id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, password TEXT, dateOfBirth TEXT, fullname TEXT, gender TEXT, orientation TEXT)
-''')
+    python -m speakeasy.orm.init_db
+
+which will create the schema on whatever database ``DATABASE_URL`` is
+pointing at (Postgres by default, or SQLite when explicitly configured).
+"""
+
+from speakeasy.orm.init_db import init_db
 
 
-c.execute("""
-SELECT name FROM sqlite_master WHERE type='table'
-""")
-
-a = c.fetchall()
-print(a)
-
-conn.commit()
-conn.close()
+if __name__ == "__main__":
+  print("[deprecated] sql/init_sqlite.py now delegates to "
+        "`python -m speakeasy.orm.init_db`.")
+  init_db()

@@ -1,3 +1,7 @@
+# NOTE: This file is dev scratch using raw sqlite3 and is *not* imported by
+# the running server. The project now uses SQLAlchemy with Postgres by
+# default — see ``speakeasy/orm/db.py`` and ``speakeasy/orm/models.py`` for
+# the actual data-access layer.
 import sqlite3
 
 conn = sqlite3.connect("sql.db")

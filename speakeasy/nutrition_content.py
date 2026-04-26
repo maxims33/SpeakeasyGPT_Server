@@ -58,7 +58,7 @@ def retrieve_menu(category: str, image_folder: str):
         "id": recipe.id, #type: ignore
         "name": str(recipe.name), 
         "category": str(recipe.category),
-        "ingredients": json.loads(str(recipe.ingredients)),
+        "ingredients": json.loads(recipe.ingredients) if isinstance(recipe.ingredients, str) else recipe.ingredients, #Postgres returns a list instaed of a string
         "instructions": str(recipe.instructions), 
         #"image_file": load_image_as_base64(f"{image_folder}/{str(recipe.image_file)}")
         "image_file": str(recipe.image_file)
